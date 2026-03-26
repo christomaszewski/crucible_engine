@@ -80,8 +80,19 @@ const App = (() => {
     // -- Add agent via modal ------------------------------------------------
 
     function showAddAgentModal() {
-        const id = Agents.generateId();
-        document.getElementById('new-agent-id').value = id;
+        const typeSelect = document.getElementById('new-agent-type');
+        const updateIdAndDomain = () => {
+            const id = Agents.generateId(typeSelect.value);
+            document.getElementById('new-agent-id').value = id;
+            // Extract number from generated ID and use as domain_id
+            const match = id.match(/_(\d+)$/);
+            if (match) {
+                document.getElementById('new-agent-domain').value = parseInt(match[1], 10);
+            }
+        };
+        typeSelect.onchange = updateIdAndDomain;
+        updateIdAndDomain();
+        document.getElementById('new-agent-class').value = '';
         document.getElementById('add-agent-modal').classList.add('visible');
     }
 
@@ -96,6 +107,8 @@ const App = (() => {
         const alt = parseFloat(document.getElementById('new-agent-alt').value);
         const heading = parseFloat(document.getElementById('new-agent-heading').value);
         const domainId = parseInt(document.getElementById('new-agent-domain').value, 10);
+        const vehicleType = document.getElementById('new-agent-type').value;
+        const vehicleClass = document.getElementById('new-agent-class').value.trim();
 
         if (!agentId) {
             toast('Agent ID is required', 'error');
@@ -107,6 +120,8 @@ const App = (() => {
             agent_id: agentId,
             lat, lon, alt, heading,
             domain_id: domainId,
+            vehicle_type: vehicleType,
+            vehicle_class: vehicleClass,
         });
 
         hideAddAgentModal();
@@ -116,14 +131,19 @@ const App = (() => {
 
     function enterPlaceMode() {
         MapView.enterPlaceMode((lat, lon) => {
-            const agentId = Agents.generateId();
+            const vehicleType = 'uxv';
+            const agentId = Agents.generateId(vehicleType);
+            const match = agentId.match(/_(\d+)$/);
+            const domainId = match ? parseInt(match[1], 10) : 0;
             WS.sendBridge({
                 cmd: 'add_agent',
                 agent_id: agentId,
                 lat, lon,
                 alt: 100.0,
                 heading: 0,
-                domain_id: 0,
+                domain_id: domainId,
+                vehicle_type: vehicleType,
+                vehicle_class: '',
             });
         });
     }

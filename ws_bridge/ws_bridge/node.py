@@ -122,6 +122,8 @@ class WsBridgeNode(Node):
         req.altitude = float(data.get("alt", 0.0))
         req.heading = float(data.get("heading", 0.0))
         req.domain_id = int(data.get("domain_id", 0))
+        req.vehicle_type = data.get("vehicle_type", "")
+        req.vehicle_class = data.get("vehicle_class", "")
 
         future = self._cli_add.call_async(req)
         result = await self._await_future(future)

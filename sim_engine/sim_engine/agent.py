@@ -63,6 +63,8 @@ class Agent:
     pose: Pose = field(default_factory=Pose)
     velocity: Velocity = field(default_factory=Velocity)
     domain_id: int = 0
+    vehicle_type: str = ""
+    vehicle_class: str = ""
     sensors: dict[str, SensorModel] = field(default_factory=dict)
     motion_model: MotionModel | None = None
 

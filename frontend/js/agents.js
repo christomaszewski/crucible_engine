@@ -3,9 +3,9 @@
  */
 
 const Agents = (() => {
-    const agents = {};  // agent_id -> { lat, lon, alt, heading, sensors, domain_id, stack_status }
+    const agents = {};  // agent_id -> { lat, lon, alt, heading, sensors, domain_id, vehicle_type, vehicle_class, stack_status }
     let selectedId = null;
-    let agentCounter = 1;
+    const typeCounters = {};  // vehicle_type -> next number
 
     function getAll() { return agents; }
     function getSelected() { return selectedId; }
@@ -19,6 +19,8 @@ const Agents = (() => {
             heading: data.heading || 0,
             sensors: data.sensors || [],
             domain_id: data.domain_id || 0,
+            vehicle_type: data.vehicle_type || '',
+            vehicle_class: data.vehicle_class || '',
             stack_status: 'STOPPED',
         };
 
@@ -193,9 +195,19 @@ const Agents = (() => {
         }
     }
 
-    function generateId() {
-        const id = `uav_${String(agentCounter).padStart(2, '0')}`;
-        agentCounter++;
+    function generateId(vehicleType = 'uxv') {
+        const prefix = vehicleType.toLowerCase();
+        if (!typeCounters[prefix]) {
+            typeCounters[prefix] = 1;
+        }
+        // Find the next available number that doesn't collide
+        let num = typeCounters[prefix];
+        let id;
+        do {
+            id = `${prefix}_${String(num).padStart(2, '0')}`;
+            num++;
+        } while (agents[id]);
+        typeCounters[prefix] = num;
         return id;
     }
 

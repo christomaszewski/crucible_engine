@@ -308,6 +308,8 @@ class SimEngineNode(Node):
                 ),
                 velocity=Velocity(),
                 domain_id=request.domain_id,
+                vehicle_type=request.vehicle_type,
+                vehicle_class=request.vehicle_class,
             )
 
             # Default to static motion

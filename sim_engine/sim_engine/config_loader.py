@@ -58,6 +58,8 @@ def load_agent_from_config(agent_id: str, agent_cfg: dict[str, Any]) -> Agent:
         pose=pose,
         velocity=Velocity(),
         domain_id=agent_cfg.get("domain_id", 0),
+        vehicle_type=agent_cfg.get("vehicle_type", ""),
+        vehicle_class=agent_cfg.get("vehicle_class", ""),
         pose_estimate_topic=agent_cfg.get("pose_estimate_topic"),
     )
 
@@ -127,6 +129,8 @@ def save_scenario(world: WorldState, sim_cfg: dict[str, Any]) -> str:
     for agent in world.get_all_agents():
         agent_cfg: dict[str, Any] = {
             "domain_id": agent.domain_id,
+            "vehicle_type": agent.vehicle_type,
+            "vehicle_class": agent.vehicle_class,
             "initial_pose": {
                 "lat": agent.pose.latitude,
                 "lon": agent.pose.longitude,
