@@ -1,0 +1,35 @@
+FROM ros:jazzy
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3-pip \
+        python3-yaml && \
+    pip3 install --break-system-packages websockets && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ros-jazzy-rmw-cyclonedds-cpp && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /ros2_ws
+
+# Copy from submodule paths (build context = integration repo root)
+COPY src/crucible_msgs/ src/sim_msgs/
+COPY src/crucible_engine/sim_engine/ src/sim_engine/
+COPY src/crucible_engine/ws_bridge/ src/ws_bridge/
+
+RUN . /opt/ros/jazzy/setup.sh && \
+    colcon build --symlink-install --packages-select sim_msgs sim_engine ws_bridge
+
+COPY <<'EOF' /ros2_ws/entrypoint.sh
+#!/bin/bash
+set -e
+source /opt/ros/jazzy/setup.bash
+source /ros2_ws/install/setup.bash
+exec "$@"
+EOF
+RUN chmod +x /ros2_ws/entrypoint.sh
+
+ENTRYPOINT ["/ros2_ws/entrypoint.sh"]
+CMD ["ros2", "run", "ws_bridge", "ws_bridge"]

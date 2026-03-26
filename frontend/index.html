@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUCIBLE</title>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Toolbar -->
+        <header id="toolbar">
+            <span class="toolbar-brand">CRUCIBLE</span>
+            <div class="toolbar-sep"></div>
+
+            <div class="toolbar-group">
+                <button class="btn btn-icon" id="btn-play" title="Play">&#9654;</button>
+                <button class="btn btn-icon" id="btn-pause" title="Pause">&#9646;&#9646;</button>
+                <button class="btn btn-icon" id="btn-step" title="Step">&#9654;|</button>
+                <select class="form-input" id="speed-select" style="width: 70px;">
+                    <option value="0.1">0.1x</option>
+                    <option value="0.5">0.5x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="2">2x</option>
+                    <option value="5">5x</option>
+                    <option value="10">10x</option>
+                    <option value="0">Max</option>
+                </select>
+            </div>
+
+            <div class="toolbar-sep"></div>
+
+            <div class="toolbar-group">
+                <button class="btn" id="btn-add-agent">+ Agent</button>
+                <button class="btn" id="btn-place-agent">&#9906; Place</button>
+            </div>
+
+            <div class="toolbar-sep"></div>
+
+            <div class="toolbar-group">
+                <button class="btn" id="btn-load-config">Load</button>
+                <button class="btn" id="btn-save-config">Save</button>
+            </div>
+
+            <div class="toolbar-spacer"></div>
+
+            <div class="toolbar-group">
+                <span class="status-item">
+                    <span class="status-dot" id="ws-status"></span>
+                    <span id="ws-status-text">Disconnected</span>
+                </span>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-header" id="agents-header">
+                    <span>Agents <span class="count" id="agent-count">0</span></span>
+                </div>
+            </div>
+            <div id="agent-list"></div>
+
+            <div id="detail-panel">
+                <!-- Populated dynamically when agent is selected -->
+            </div>
+        </aside>
+
+        <!-- Map -->
+        <main id="map-container">
+            <div id="map"></div>
+
+            <div class="place-mode-banner" id="place-banner">
+                Click map to place agent — ESC to cancel
+            </div>
+
+            <div class="map-overlay">
+                <button class="btn btn-sm" id="btn-fit-agents" title="Fit all agents">&#9635;</button>
+            </div>
+
+            <div id="accuracy-panel"></div>
+        </main>
+
+        <!-- Status bar -->
+        <footer id="status-bar">
+            <span id="sim-time">T: 0.000s</span>
+            <span id="agent-summary">0 agents | 0 sensors</span>
+        </footer>
+    </div>
+
+    <!-- Config modal -->
+    <div class="modal-overlay" id="config-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="modal-title">Load Configuration</span>
+                <button class="btn btn-sm" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea class="config-editor" id="config-editor"
+                    placeholder="Paste YAML configuration here..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="modal-cancel">Cancel</button>
+                <button class="btn btn-accent" id="modal-confirm">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add agent modal -->
+    <div class="modal-overlay" id="add-agent-modal">
+        <div class="modal" style="width: 420px;">
+            <div class="modal-header">
+                <span class="modal-title">Add Agent</span>
+                <button class="btn btn-sm" id="add-agent-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <label class="form-label">Agent ID</label>
+                    <input class="form-input" id="new-agent-id" placeholder="uav_01">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Latitude</label>
+                    <input class="form-input" id="new-agent-lat" type="number" step="any" value="38.9072">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Longitude</label>
+                    <input class="form-input" id="new-agent-lon" type="number" step="any" value="-77.0369">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Altitude</label>
+                    <input class="form-input" id="new-agent-alt" type="number" step="any" value="100">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Heading</label>
+                    <input class="form-input" id="new-agent-heading" type="number" step="any" value="0">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Domain ID</label>
+                    <input class="form-input" id="new-agent-domain" type="number" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="add-agent-cancel">Cancel</button>
+                <button class="btn btn-accent" id="add-agent-confirm">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/ws.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/agents.js"></script>
+    <script src="js/sensors.js"></script>
+    <script src="js/accuracy.js"></script>
+    <script src="js/scenario.js"></script>
+    <script src="js/orchestrator.js"></script>
+    <script src="js/sim_control.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

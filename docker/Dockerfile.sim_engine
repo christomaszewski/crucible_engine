@@ -1,0 +1,41 @@
+FROM ros:jazzy
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3-pip \
+        python3-yaml && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ros-jazzy-rmw-cyclonedds-cpp && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /ros2_ws
+
+# Copy from submodule paths (build context = integration repo root)
+COPY src/crucible_msgs/ src/sim_msgs/
+COPY src/crucible_engine/sim_engine/ src/sim_engine/
+
+RUN . /opt/ros/jazzy/setup.sh && \
+    colcon build --symlink-install --packages-select sim_msgs sim_engine
+
+COPY <<'EOF' /ros2_ws/entrypoint.sh
+#!/bin/bash
+set -e
+source /opt/ros/jazzy/setup.bash
+source /ros2_ws/install/setup.bash
+
+# Extend ament prefix path for custom sensor plugins if mounted
+if [ -d "/opt/custom_sensors" ]; then
+    for dir in /opt/custom_sensors/*/; do
+        export AMENT_PREFIX_PATH="${dir}:${AMENT_PREFIX_PATH}"
+    done
+fi
+
+exec "$@"
+EOF
+RUN chmod +x /ros2_ws/entrypoint.sh
+
+ENTRYPOINT ["/ros2_ws/entrypoint.sh"]
+CMD ["ros2", "run", "sim_engine", "sim_engine"]
