@@ -301,12 +301,12 @@ class WsBridgeNode(Node):
 
     async def _await_future(self, future, timeout: float = 5.0):
         """Await a ROS2 service future from async context."""
-        loop = asyncio.get_event_loop()
-        result = await asyncio.wait_for(
-            loop.run_in_executor(None, lambda: future.result(timeout=timeout)),
-            timeout=timeout + 1.0,
-        )
-        return result
+        deadline = asyncio.get_event_loop().time() + timeout
+        while not future.done():
+            if asyncio.get_event_loop().time() > deadline:
+                raise TimeoutError(f"Service call timed out after {timeout}s")
+            await asyncio.sleep(0.05)
+        return future.result()
 
 
 async def ws_handler(ws, node: WsBridgeNode):
