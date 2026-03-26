@@ -20,8 +20,8 @@ from rclpy.qos import (
 from rosgraph_msgs.msg import Clock
 from std_msgs.msg import Header
 
-from sim_msgs.msg import GroundTruth
-from sim_msgs.srv import (
+from crucible_msgs.msg import GroundTruth
+from crucible_msgs.srv import (
     AddAgent,
     ConfigureSensor,
     LoadScenario,

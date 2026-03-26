@@ -12,8 +12,8 @@ import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 
-from sim_msgs.msg import GroundTruth
-from sim_msgs.srv import (
+from crucible_msgs.msg import GroundTruth
+from crucible_msgs.srv import (
     AddAgent,
     ConfigureSensor,
     LoadScenario,

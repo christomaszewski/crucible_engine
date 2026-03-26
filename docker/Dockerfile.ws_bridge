@@ -15,12 +15,12 @@ RUN apt-get update && \
 WORKDIR /ros2_ws
 
 # Copy from submodule paths (build context = integration repo root)
-COPY src/crucible_msgs/ src/sim_msgs/
+COPY src/crucible_msgs/ src/crucible_msgs/
 COPY src/crucible_engine/sim_engine/ src/sim_engine/
 COPY src/crucible_engine/ws_bridge/ src/ws_bridge/
 
 RUN . /opt/ros/jazzy/setup.sh && \
-    colcon build --symlink-install --packages-select sim_msgs sim_engine ws_bridge
+    colcon build --symlink-install --packages-select crucible_msgs sim_engine ws_bridge
 
 COPY <<'EOF' /ros2_ws/entrypoint.sh
 #!/bin/bash

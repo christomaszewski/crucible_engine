@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sim_msgs.msg import RangeArray, RangeStamped
+from crucible_msgs.msg import RangeArray, RangeStamped
 from std_msgs.msg import Header
 
 from sim_engine.agent import Agent

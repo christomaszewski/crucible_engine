@@ -29,6 +29,7 @@ const Agents = (() => {
 
     function removeAgent(agentId) {
         WS.sendBridge({ cmd: 'remove_agent', agent_id: agentId });
+        Accuracy.removeAgent(agentId);
         delete agents[agentId];
         MapView.removeAgent(agentId);
         if (selectedId === agentId) {

@@ -75,11 +75,14 @@ const MapView = (() => {
 
         marker.on('dragend', () => {
             const pos = marker.getLatLng();
+            const agentData = Agents.getAll()[agentId] || {};
             WS.sendBridge({
                 cmd: 'set_pose',
                 agent_id: agentId,
                 lat: pos.lat,
                 lon: pos.lng,
+                alt: agentData.alt || 0,
+                heading: agentData.heading || 0,
             });
         });
 
