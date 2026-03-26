@@ -460,6 +460,7 @@ class SimEngineNode(Node):
                 self._register_agent(agent)
 
             events = config.get("scenario", {}).get("events", [])
+            self._scenario = ScenarioRunner(self._world)
             self._scenario.load_events(events)
 
             self.get_logger().info(f"Loaded config: {path}")
