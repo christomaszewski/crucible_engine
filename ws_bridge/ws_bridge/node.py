@@ -114,11 +114,11 @@ class WsBridgeNode(Node):
     async def _cmd_add_agent(self, ws, data: dict) -> None:
         req = AddAgent.Request()
         req.agent_id = data["agent_id"]
-        req.latitude = data.get("lat", 0.0)
-        req.longitude = data.get("lon", 0.0)
-        req.altitude = data.get("alt", 0.0)
-        req.heading = data.get("heading", 0.0)
-        req.domain_id = data.get("domain_id", 0)
+        req.latitude = float(data.get("lat", 0.0))
+        req.longitude = float(data.get("lon", 0.0))
+        req.altitude = float(data.get("alt", 0.0))
+        req.heading = float(data.get("heading", 0.0))
+        req.domain_id = int(data.get("domain_id", 0))
 
         future = self._cli_add.call_async(req)
         result = await self._await_future(future)
