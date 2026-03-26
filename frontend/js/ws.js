@@ -26,6 +26,8 @@ const WS = (() => {
                 clearTimeout(reconnectTimer);
                 reconnectTimer = null;
             }
+            // Request current state on connect
+            sendBridge({ cmd: 'get_state' });
         };
 
         bridgeWs.onmessage = (event) => {

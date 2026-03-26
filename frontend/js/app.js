@@ -109,13 +109,6 @@ const App = (() => {
             domain_id: domainId,
         });
 
-        Agents.addAgent({
-            agent_id: agentId,
-            lat, lon, alt, heading,
-            domain_id: domainId,
-            sensors: [],
-        });
-
         hideAddAgentModal();
     }
 
@@ -132,15 +125,6 @@ const App = (() => {
                 heading: 0,
                 domain_id: 0,
             });
-            Agents.addAgent({
-                agent_id: agentId,
-                lat, lon,
-                alt: 100.0,
-                heading: 0,
-                domain_id: 0,
-                sensors: [],
-            });
-            Agents.selectAgent(agentId);
         });
     }
 

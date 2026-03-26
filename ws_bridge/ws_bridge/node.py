@@ -55,6 +55,9 @@ class WsBridgeNode(Node):
         # Ground truth cache for broadcasting
         self._gt_cache: dict[str, dict] = {}
 
+        # Periodically scan for ground truth topics to auto-subscribe
+        self._discovery_timer = self.create_timer(2.0, self._discover_agents)
+
         self.get_logger().info("WS Bridge node initialized")
 
     # -- WebSocket management ------------------------------------------------
@@ -239,6 +242,40 @@ class WsBridgeNode(Node):
                 "types": list(MOTION_REGISTRY.keys()),
             })
         )
+
+    async def _cmd_get_state(self, ws, data: dict) -> None:
+        """Send cached ground truth state for all known agents."""
+        agents = {}
+        for agent_id, gt in self._gt_cache.items():
+            agents[agent_id] = {
+                "lat": gt.get("lat", 0.0),
+                "lon": gt.get("lon", 0.0),
+                "alt": gt.get("alt", 0.0),
+                "heading": gt.get("heading", 0.0),
+                "sensors": gt.get("sensors", []),
+                "domain_id": gt.get("domain_id", 0),
+            }
+        await ws.send(json.dumps({
+            "type": "state",
+            "data": {"agents": agents},
+        }))
+
+    # -- Agent discovery -----------------------------------------------------
+
+    def _discover_agents(self) -> None:
+        """Scan for ground truth topics and auto-subscribe to new agents."""
+        topic_list = self.get_topic_names_and_types()
+        for topic_name, _types in topic_list:
+            if topic_name.endswith("/sim/ground_truth"):
+                # Extract agent_id from /<agent_id>/sim/ground_truth
+                parts = topic_name.strip("/").split("/")
+                if len(parts) >= 3:
+                    agent_id = parts[0]
+                    if agent_id not in self._gt_subs:
+                        self._subscribe_ground_truth(agent_id)
+                        self.get_logger().info(
+                            f"Auto-discovered agent: {agent_id}"
+                        )
 
     # -- Ground truth subscription -------------------------------------------
 

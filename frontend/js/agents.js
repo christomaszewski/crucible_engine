@@ -41,8 +41,20 @@ const Agents = (() => {
     }
 
     function updateGroundTruth(data) {
-        const agent = agents[data.agent_id];
-        if (!agent) return;
+        let agent = agents[data.agent_id];
+        if (!agent) {
+            // Auto-create agent from ground truth (e.g. loaded from scenario)
+            addAgent({
+                agent_id: data.agent_id,
+                lat: data.lat,
+                lon: data.lon,
+                alt: data.alt,
+                heading: data.heading,
+                sensors: [],
+                domain_id: 0,
+            });
+            return;
+        }
         agent.lat = data.lat;
         agent.lon = data.lon;
         agent.alt = data.alt;
