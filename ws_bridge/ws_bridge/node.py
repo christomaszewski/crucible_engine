@@ -290,7 +290,7 @@ class WsBridgeNode(Node):
         self._pose_est_subs[agent_id] = self.create_subscription(
             NavSatFix, topic, callback, 10
         )
-        self.get_logger().info("Subscribed pose estimate: %s -> %s", agent_id, topic)
+        self.get_logger().info(f"Subscribed pose estimate: {agent_id} -> {topic}")
 
     def _unsubscribe_pose_estimate(self, agent_id: str) -> None:
         sub = self._pose_est_subs.pop(agent_id, None)
@@ -338,7 +338,7 @@ async def run_ws_server(node: WsBridgeNode) -> None:
         "0.0.0.0",
         WS_PORT,
     ):
-        node.get_logger().info("WebSocket server listening on port %d", WS_PORT)
+        node.get_logger().info(f"WebSocket server listening on port {WS_PORT}")
         await asyncio.Future()  # run forever
 
 

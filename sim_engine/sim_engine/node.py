@@ -156,9 +156,7 @@ class SimEngineNode(Node):
         self._running = True
 
         self.get_logger().info(
-            "CRUCIBLE sim engine started: tick_rate=%d Hz, speed=%.1fx",
-            self._tick_rate_hz,
-            self._speed_multiplier,
+            f"CRUCIBLE sim engine started: tick_rate={self._tick_rate_hz} Hz, speed={self._speed_multiplier:.1f}x"
         )
 
     # -- Sim loop ------------------------------------------------------------
@@ -256,12 +254,12 @@ class SimEngineNode(Node):
             topic = f"/{agent.agent_id}/{tc.suffix}"
             pub = self.create_publisher(tc.msg_type, topic, _make_qos(tc.qos))
             pubs.sensor_pubs[sensor_name] = pub
-            self.get_logger().info("Publishing: %s [%s]", topic, tc.msg_type.__name__)
+            self.get_logger().info(f"Publishing: {topic} [{tc.msg_type.__name__}]")
 
         # Ground truth publisher
         gt_topic = f"/{agent.agent_id}/sim/ground_truth"
         pubs.ground_truth_pub = self.create_publisher(GroundTruth, gt_topic, 10)
-        self.get_logger().info("Publishing ground truth: %s", gt_topic)
+        self.get_logger().info(f"Publishing ground truth: {gt_topic}")
 
         # Command velocity subscriber (if commanded motion)
         if isinstance(agent.motion_model, CommandedVelocityModel):
@@ -272,7 +270,7 @@ class SimEngineNode(Node):
                 agent.motion_model.on_command,
                 10,
             )
-            self.get_logger().info("Subscribing cmd_vel: %s", cmd_topic)
+            self.get_logger().info(f"Subscribing cmd_vel: {cmd_topic}")
 
         self._agent_pubs[agent.agent_id] = pubs
 
@@ -464,9 +462,9 @@ class SimEngineNode(Node):
             events = config.get("scenario", {}).get("events", [])
             self._scenario.load_events(events)
 
-            self.get_logger().info("Loaded config: %s", path)
-        except Exception:
-            self.get_logger().exception("Failed to load config: %s", path)
+            self.get_logger().info(f"Loaded config: {path}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to load config: {path}\n{e}")
 
 
 def main(args=None):
