@@ -331,6 +331,8 @@ class WsBridgeNode(Node):
         import yaml
 
         agents = {}
+        sim_time = 0.0
+        sim_status = "READY"
 
         # Try to get full state from SaveScenario service
         try:
@@ -341,7 +343,9 @@ class WsBridgeNode(Node):
 
             if result.success and result.config_yaml:
                 config = yaml.safe_load(result.config_yaml)
-                sim_time = config.get("sim", {}).get("sim_time_s", 0.0)
+                sim_cfg = config.get("sim", {})
+                sim_time = sim_cfg.get("sim_time_s", 0.0)
+                sim_status = sim_cfg.get("status", "READY")
 
                 for agent_id, agent_cfg in config.get("agents", {}).items():
                     pose = agent_cfg.get("initial_pose", {})
@@ -374,7 +378,11 @@ class WsBridgeNode(Node):
 
         await ws.send(json.dumps({
             "type": "state",
-            "data": {"agents": agents},
+            "data": {
+                "agents": agents,
+                "sim_time_s": sim_time,
+                "status": sim_status,
+            },
             "state_version": self._state_version,
         }))
 

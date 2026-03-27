@@ -70,12 +70,18 @@ const App = (() => {
                                 ...agentData,
                             });
                         } else {
-                            // Merge enriched data into existing agent
+                            // Merge all data into existing agent
+                            if (agentData.lat !== undefined) existing.lat = agentData.lat;
+                            if (agentData.lon !== undefined) existing.lon = agentData.lon;
+                            if (agentData.alt !== undefined) existing.alt = agentData.alt;
+                            if (agentData.heading !== undefined) existing.heading = agentData.heading;
                             if (agentData.sensors) existing.sensors = agentData.sensors;
                             if (agentData.sensor_configs) existing.sensor_configs = agentData.sensor_configs;
                             if (agentData.vehicle_type) existing.vehicle_type = agentData.vehicle_type;
                             if (agentData.vehicle_class) existing.vehicle_class = agentData.vehicle_class;
                             if (agentData.domain_id !== undefined) existing.domain_id = agentData.domain_id;
+                            // Update map marker position
+                            MapView.updateAgent(id, existing.lat, existing.lon, existing.heading);
                         }
                     }
                     Agents.renderList();
@@ -84,6 +90,7 @@ const App = (() => {
                     const sel = Agents.getSelected();
                     if (sel && Agents.getAll()[sel]) Agents.refreshDetail(sel);
                     SimControl.updateTime(data.data.sim_time_s || 0);
+                    if (data.data.status) SimControl.setStatus(data.data.status);
                     MapView.fitAgents();
                 }
                 Agents.setLastKnownVersion(backendVersion);

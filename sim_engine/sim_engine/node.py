@@ -118,7 +118,7 @@ class SimEngineNode(Node):
         # Sim state
         self._world = WorldState()
         self._scenario = ScenarioRunner(self._world)
-        self._status = "PAUSED"  # RUNNING, PAUSED, COMPLETE
+        self._status = "READY"  # READY, RUNNING, PAUSED, COMPLETE
         self._agent_pubs: dict[str, _AgentPublishers] = {}
         self._gt_accumulator: float = 0.0
 
@@ -498,8 +498,8 @@ class SimEngineNode(Node):
             self._scenario = ScenarioRunner(self._world)
             self._scenario.load_events(events)
 
-            # Pause after load so user can inspect before running
-            self._status = "PAUSED"
+            # Ready state after load so user can inspect before running
+            self._status = "READY"
 
             response.success = True
             response.message = f"Loaded scenario with {len(self._world.get_all_agents())} agents"
@@ -515,6 +515,7 @@ class SimEngineNode(Node):
         response: SaveScenario.Response,
     ) -> SaveScenario.Response:
         try:
+            self._sim_cfg["status"] = self._status
             yaml_str = save_scenario(self._world, self._sim_cfg)
             response.config_yaml = yaml_str
             response.success = True
@@ -550,11 +551,11 @@ class SimEngineNode(Node):
                     response.message = "Cannot step while running — pause first"
                 else:
                     self._step_once()
-                    self._status = "PAUSED"
+                    self._status = "PAUSED"  # stepping means we've left READY
                     response.success = True
                     response.message = f"Stepped {self._sim_dt:.4f}s"
             elif action == "reset":
-                self._status = "PAUSED"
+                self._status = "READY"
                 self._world.sim_time_ns = 0
                 self._gt_accumulator = 0.0
                 # Restore initial poses and zero velocities

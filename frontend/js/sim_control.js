@@ -1,10 +1,12 @@
 /**
  * Sim control module — play, pause, step, reset, speed multiplier, status display.
+ *
+ * States: READY (at initial conditions), RUNNING, PAUSED (mid-run), COMPLETE
  */
 
 const SimControl = (() => {
     let simTime = 0;
-    let simStatus = 'PAUSED';
+    let simStatus = 'READY';
     let simSpeed = 1.0;
 
     function init() {
@@ -31,7 +33,6 @@ const SimControl = (() => {
 
         // Listen for status updates from backend
         WS.on('bridge:sim_status', (data) => {
-            const wasReset = data.status === 'PAUSED' && data.message && data.message.includes('reset');
             if (data.status) {
                 simStatus = data.status;
             }
@@ -40,8 +41,8 @@ const SimControl = (() => {
             }
             updateStatusDisplay();
 
-            // On reset: update time to 0 and refresh agent positions
-            if (wasReset) {
+            // On reset (READY): update time to 0 and refresh agent positions
+            if (simStatus === 'READY') {
                 updateTime(0);
                 WS.sendBridge({ cmd: 'get_state' });
             }
@@ -55,6 +56,13 @@ const SimControl = (() => {
         document.getElementById('sim-time').textContent = `T: ${timeS.toFixed(3)}s`;
     }
 
+    function setStatus(status) {
+        if (status) {
+            simStatus = status;
+            updateStatusDisplay();
+        }
+    }
+
     function updateStatusDisplay() {
         const badge = document.getElementById('sim-status-badge');
         if (badge) {
@@ -65,5 +73,5 @@ const SimControl = (() => {
         MapView.setDraggable(simStatus !== 'RUNNING');
     }
 
-    return { init, updateTime };
+    return { init, updateTime, setStatus };
 })();

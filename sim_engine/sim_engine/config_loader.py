@@ -118,6 +118,8 @@ def save_scenario(world: WorldState, sim_cfg: dict[str, Any]) -> str:
             "sim_dt": sim_cfg.get("sim_dt", 0.01),
             "speed_multiplier": sim_cfg.get("speed_multiplier", 1.0),
             "seed": sim_cfg.get("seed", 42),
+            "sim_time_s": world.sim_time_sec,
+            "status": sim_cfg.get("status", "READY"),
         },
         "agents": {},
     }
