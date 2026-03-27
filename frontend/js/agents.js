@@ -5,7 +5,7 @@
 const Agents = (() => {
     const agents = {};  // agent_id -> { lat, lon, alt, heading, sensors, domain_id, vehicle_type, vehicle_class, stack_status }
     let selectedId = null;
-    let globalCounter = 1;  // next agent number (globally unique)
+    let lastKnownVersion = 0;  // last state_version received from backend
 
     function getAll() { return agents; }
     function getSelected() { return selectedId; }
@@ -23,15 +23,6 @@ const Agents = (() => {
             vehicle_class: data.vehicle_class || '',
             stack_status: 'STOPPED',
         };
-
-        // Sync global counter past any existing agent numbers
-        const match = id.match(/_(\d+)$/);
-        if (match) {
-            const num = parseInt(match[1], 10);
-            if (num >= globalCounter) {
-                globalCounter = num + 1;
-            }
-        }
 
         MapView.addAgent(id, agents[id].lat, agents[id].lon);
         renderList();
@@ -216,23 +207,38 @@ const Agents = (() => {
         }
     }
 
-    function _nextAvailableNumber() {
-        let num = globalCounter;
-        while (true) {
-            const numStr = String(num).padStart(2, '0');
-            const numberInUse = Object.keys(agents).some(existingId => {
-                const match = existingId.match(/_(\d+)$/);
-                return match && match[1] === numStr;
-            });
-            if (!numberInUse) return num;
-            num++;
+    function _lowestAvailableNumber() {
+        const used = new Set();
+        for (const id of Object.keys(agents)) {
+            const m = id.match(/_(\d+)$/);
+            if (m) used.add(parseInt(m[1], 10));
         }
+        let num = 1;
+        while (used.has(num)) num++;
+        return num;
     }
 
     function generateId(vehicleType = 'uxv') {
         const prefix = vehicleType.toLowerCase();
-        const num = _nextAvailableNumber();
+        const num = _lowestAvailableNumber();
         return `${prefix}_${String(num).padStart(2, '0')}`;
+    }
+
+    function getLastKnownVersion() { return lastKnownVersion; }
+    function setLastKnownVersion(v) { lastKnownVersion = v; }
+
+    function getSerializableState() {
+        const copy = {};
+        for (const [id, a] of Object.entries(agents)) {
+            copy[id] = {
+                lat: a.lat, lon: a.lon, alt: a.alt, heading: a.heading,
+                sensors: [...(a.sensors || [])],
+                domain_id: a.domain_id,
+                vehicle_type: a.vehicle_type,
+                vehicle_class: a.vehicle_class,
+            };
+        }
+        return { agents: copy, lastKnownVersion };
     }
 
     function clear() {
@@ -258,5 +264,8 @@ const Agents = (() => {
         renderList,
         updateSummary,
         clear,
+        getLastKnownVersion,
+        setLastKnownVersion,
+        getSerializableState,
     };
 })();

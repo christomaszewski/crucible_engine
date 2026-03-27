@@ -39,22 +39,45 @@ const App = (() => {
         });
 
         WS.on('bridge:state', (data) => {
-            // Full state update — rebuild agent list
-            if (data.data && data.data.agents) {
-                for (const [id, agentData] of Object.entries(data.data.agents)) {
-                    const existing = Agents.getAll()[id];
-                    if (!existing) {
-                        Agents.addAgent({
-                            agent_id: id,
-                            ...agentData,
-                        });
+            const backendVersion = data.state_version || 0;
+            const uiVersion = Agents.getLastKnownVersion();
+            const uiAgents = Agents.getAll();
+            const hasUiAgents = Object.keys(uiAgents).length > 0;
+
+            if (hasUiAgents && uiVersion > backendVersion) {
+                // Backend restarted with stale state — push UI state
+                const state = Agents.getSerializableState();
+                WS.sendBridge({
+                    cmd: 'push_state',
+                    agents: state.agents,
+                    state_version: state.lastKnownVersion,
+                });
+                toast('Backend restart detected — restoring state from UI', 'info');
+            } else {
+                // Accept backend state
+                if (data.data && data.data.agents) {
+                    if (backendVersion > uiVersion) {
+                        Agents.clear();
                     }
+                    for (const [id, agentData] of Object.entries(data.data.agents)) {
+                        const existing = Agents.getAll()[id];
+                        if (!existing) {
+                            Agents.addAgent({
+                                agent_id: id,
+                                ...agentData,
+                            });
+                        }
+                    }
+                    SimControl.updateTime(data.data.sim_time_s || 0);
                 }
-                SimControl.updateTime(data.data.sim_time_s || 0);
+                Agents.setLastKnownVersion(backendVersion);
             }
         });
 
         WS.on('bridge:info', (data) => {
+            if (data.state_version !== undefined) {
+                Agents.setLastKnownVersion(data.state_version);
+            }
             if (data.success) {
                 toast(data.message, 'success');
             } else {

@@ -55,6 +55,9 @@ class WsBridgeNode(Node):
         # Ground truth cache for broadcasting
         self._gt_cache: dict[str, dict] = {}
 
+        # Monotonic version counter (resets to 0 on restart)
+        self._state_version: int = 0
+
         # Periodically scan for ground truth topics to auto-subscribe
         self._discovery_timer = self.create_timer(2.0, self._discover_agents)
 
@@ -131,10 +134,12 @@ class WsBridgeNode(Node):
         # Subscribe to ground truth for this agent
         self._subscribe_ground_truth(data["agent_id"])
 
+        self._state_version += 1
         await self.broadcast({
             "type": "info",
             "message": result.message,
             "success": result.success,
+            "state_version": self._state_version,
         })
 
     async def _cmd_remove_agent(self, ws, data: dict) -> None:
@@ -147,10 +152,12 @@ class WsBridgeNode(Node):
         self._unsubscribe_ground_truth(data["agent_id"])
         self._unsubscribe_pose_estimate(data["agent_id"])
 
+        self._state_version += 1
         await self.broadcast({
             "type": "info",
             "message": result.message,
             "success": result.success,
+            "state_version": self._state_version,
         })
 
     async def _cmd_configure_sensor(self, ws, data: dict) -> None:
@@ -293,7 +300,56 @@ class WsBridgeNode(Node):
         await ws.send(json.dumps({
             "type": "state",
             "data": {"agents": agents},
+            "state_version": self._state_version,
         }))
+
+    async def _cmd_push_state(self, ws, data: dict) -> None:
+        """Accept full state from the UI (used after backend restart)."""
+        ui_agents = data.get("agents", {})
+        ui_version = data.get("state_version", 0)
+
+        # Determine which agents to add/remove
+        backend_ids = set(self._gt_cache.keys())
+        ui_ids = set(ui_agents.keys())
+
+        # Remove backend agents not in UI
+        for agent_id in backend_ids - ui_ids:
+            try:
+                req = RemoveAgent.Request()
+                req.agent_id = agent_id
+                future = self._cli_remove.call_async(req)
+                await self._await_future(future)
+                self._unsubscribe_ground_truth(agent_id)
+                self._unsubscribe_pose_estimate(agent_id)
+            except Exception as e:
+                self.get_logger().error(f"push_state remove {agent_id}: {e}")
+
+        # Add UI agents not in backend
+        for agent_id in ui_ids - backend_ids:
+            agent = ui_agents[agent_id]
+            try:
+                req = AddAgent.Request()
+                req.agent_id = agent_id
+                req.latitude = float(agent.get("lat", 0.0))
+                req.longitude = float(agent.get("lon", 0.0))
+                req.altitude = float(agent.get("alt", 0.0))
+                req.heading = float(agent.get("heading", 0.0))
+                req.domain_id = int(agent.get("domain_id", 0))
+                req.vehicle_type = agent.get("vehicle_type", "")
+                req.vehicle_class = agent.get("vehicle_class", "")
+                future = self._cli_add.call_async(req)
+                await self._await_future(future)
+                self._subscribe_ground_truth(agent_id)
+            except Exception as e:
+                self.get_logger().error(f"push_state add {agent_id}: {e}")
+
+        self._state_version = ui_version
+        await self.broadcast({
+            "type": "info",
+            "message": "State restored from UI",
+            "success": True,
+            "state_version": self._state_version,
+        })
 
     # -- Agent discovery -----------------------------------------------------
 
