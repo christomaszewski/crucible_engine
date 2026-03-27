@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 140" fill="none">
+  <!-- CRUCIBLE — C crucible pouring, stream becomes underline flowing right -->
+  <defs>
+    <linearGradient id="m11" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD54F"/>
+      <stop offset="50%" stop-color="#FF9800"/>
+      <stop offset="100%" stop-color="#E65100"/>
+    </linearGradient>
+    <linearGradient id="s11" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF9800"/>
+      <stop offset="50%" stop-color="#E65100"/>
+      <stop offset="100%" stop-color="#BF360C" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="g11"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+  <style>
+    .lt11 { fill: #C8CCD2; font-family: 'Courier New', monospace; font-size: 76px; font-weight: 700; }
+  </style>
+
+  <!-- Dark bg -->
+  <rect width="700" height="140" rx="8" fill="#0D0F12"/>
+
+  <!-- C crucible — tilted clockwise, opening left -->
+  <g transform="translate(54, 4)">
+    <g transform="rotate(32, 42, 50)">
+      <path d="M10,16 L3,64 Q3,84 24,84 L60,84 Q81,84 81,64 L74,16"
+            stroke="#888" stroke-width="6" fill="#16181E" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10,16 L3,8" stroke="#999" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M74,16 L81,8" stroke="#888" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- Molten contents -->
+      <path d="M74,26 Q42,44 10,32 L12,64 Q12,78 28,78 L56,78 Q72,78 72,64 Z"
+            fill="url(#m11)" opacity="0.85"/>
+      <ellipse cx="42" cy="54" rx="22" ry="13" fill="#FFD54F" opacity="0.2" filter="url(#g11)"/>
+    </g>
+
+    <!-- Pour stream — drops from left lip, curves down to bottom, then sweeps right as underline -->
+    <path d="M-8,18 C-14,38 -16,58 -10,78 C-4,96 10,110 36,118 Q80,126 660,126"
+          stroke="url(#s11)" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
+    <!-- Thicker glow on the pour section only -->
+    <path d="M-8,18 C-14,38 -16,58 -10,78 C-4,96 10,110 36,118"
+          stroke="#FF9800" stroke-width="12" fill="none" stroke-linecap="round" opacity="0.12" filter="url(#g11)"/>
+  </g>
+
+  <!-- RUCIBLE -->
+  <text x="118" y="92" class="lt11">RUCIBLE</text>
+
+  <!-- Tagline -->
+  <text x="120" y="118" fill="#555" font-family="'Courier New', monospace" font-size="11" letter-spacing="3px">MULTI-AGENT SIMULATION FRAMEWORK</text>
+</svg>
