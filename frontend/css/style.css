@@ -191,6 +191,93 @@ html, body {
     font-size: 11px;
 }
 
+/* -- Split button (Place) ----------------------------------------------- */
+
+.split-btn {
+    display: inline-flex;
+    position: relative;
+}
+
+.split-btn-main {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+}
+
+.split-btn-arrow {
+    padding: 6px 6px;
+    font-size: 10px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    min-width: 24px;
+}
+
+.split-btn-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    min-width: 120px;
+    overflow: hidden;
+}
+
+.split-btn-menu.visible {
+    display: block;
+}
+
+.split-btn-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.split-btn-item:hover {
+    background: var(--bg-elevated);
+}
+
+.split-btn-item.active {
+    background: var(--bg-tertiary);
+    color: var(--accent);
+}
+
+.vehicle-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.place-icon {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+}
+
+.place-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* -- Vehicle type colors ------------------------------------------------ */
+
+:root {
+    --color-uxv: #4a9eff;
+    --color-uav: #8be9fd;
+    --color-usv: #50fa7b;
+    --color-ugv: #ffb347;
+    --color-uuv: #bd93f9;
+}
+
 /* -- Sidebar ------------------------------------------------------------ */
 
 .sidebar-section {
@@ -268,11 +355,31 @@ html, body {
 }
 
 .agent-id {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--font-mono);
     font-weight: 600;
     font-size: 13px;
     color: var(--text-primary);
 }
+
+.agent-type-icon {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+}
+
+.agent-type-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.agent-type-icon.type-uxv { color: var(--color-uxv); }
+.agent-type-icon.type-uav { color: var(--color-uav); }
+.agent-type-icon.type-usv { color: var(--color-usv); }
+.agent-type-icon.type-ugv { color: var(--color-ugv); }
+.agent-type-icon.type-uuv { color: var(--color-uuv); }
 
 .agent-status {
     width: 8px;
@@ -328,6 +435,9 @@ html, body {
 }
 
 .detail-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
@@ -406,18 +516,20 @@ select.form-input {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--color-uxv);
     border: 2px solid white;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 700;
-    color: white;
     box-shadow: var(--shadow);
     transition: transform var(--transition);
     cursor: pointer;
+}
+
+.agent-marker svg {
+    width: 16px;
+    height: 16px;
+    color: white;
 }
 
 .agent-marker:hover {
@@ -427,6 +539,17 @@ select.form-input {
 .agent-marker.selected {
     box-shadow: 0 0 0 3px var(--accent), var(--shadow);
 }
+
+.agent-marker.type-uxv { background: var(--color-uxv); }
+.agent-marker.type-uav { background: var(--color-uav); }
+.agent-marker.type-usv { background: var(--color-usv); }
+.agent-marker.type-ugv { background: var(--color-ugv); }
+.agent-marker.type-uuv { background: var(--color-uuv); }
+
+.agent-marker.selected.type-uav { box-shadow: 0 0 0 3px var(--color-uav), var(--shadow); }
+.agent-marker.selected.type-usv { box-shadow: 0 0 0 3px var(--color-usv), var(--shadow); }
+.agent-marker.selected.type-ugv { box-shadow: 0 0 0 3px var(--color-ugv), var(--shadow); }
+.agent-marker.selected.type-uuv { box-shadow: 0 0 0 3px var(--color-uuv), var(--shadow); }
 
 /* Pose estimate marker (translucent ring) */
 .estimate-marker {

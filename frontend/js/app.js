@@ -68,8 +68,10 @@ const App = (() => {
 
         // Toolbar buttons
         document.getElementById('btn-add-agent').addEventListener('click', showAddAgentModal);
-        document.getElementById('btn-place-agent').addEventListener('click', enterPlaceMode);
         document.getElementById('btn-fit-agents').addEventListener('click', () => MapView.fitAgents());
+
+        // Place split button
+        initPlaceButton();
 
         // Add agent modal
         document.getElementById('add-agent-close').addEventListener('click', hideAddAgentModal);
@@ -129,10 +131,51 @@ const App = (() => {
 
     // -- Place agent on map -------------------------------------------------
 
+    let placeVehicleType = 'uxv';
+
+    function initPlaceButton() {
+        const mainBtn = document.getElementById('btn-place-agent');
+        const arrowBtn = document.getElementById('btn-place-dropdown');
+        const menu = document.getElementById('place-menu');
+
+        // Set initial icon
+        updatePlaceButton();
+
+        mainBtn.addEventListener('click', enterPlaceMode);
+
+        arrowBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.classList.toggle('visible');
+        });
+
+        // Menu item selection
+        menu.querySelectorAll('.split-btn-item').forEach(item => {
+            item.addEventListener('click', () => {
+                placeVehicleType = item.dataset.type;
+                updatePlaceButton();
+                menu.classList.remove('visible');
+            });
+        });
+
+        // Close menu on outside click
+        document.addEventListener('click', () => {
+            menu.classList.remove('visible');
+        });
+    }
+
+    function updatePlaceButton() {
+        document.getElementById('place-icon').innerHTML = Icons.getSvg(placeVehicleType);
+        document.getElementById('place-label').textContent = `Place ${Icons.getLabel(placeVehicleType)}`;
+
+        // Highlight active item in menu
+        document.querySelectorAll('#place-menu .split-btn-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.type === placeVehicleType);
+        });
+    }
+
     function enterPlaceMode() {
         MapView.enterPlaceMode((lat, lon) => {
-            const vehicleType = 'uxv';
-            const agentId = Agents.generateId(vehicleType);
+            const agentId = Agents.generateId(placeVehicleType);
             const match = agentId.match(/_(\d+)$/);
             const domainId = match ? parseInt(match[1], 10) : 0;
             WS.sendBridge({
@@ -142,7 +185,7 @@ const App = (() => {
                 alt: 100.0,
                 heading: 0,
                 domain_id: domainId,
-                vehicle_type: vehicleType,
+                vehicle_type: placeVehicleType,
                 vehicle_class: '',
             });
         });

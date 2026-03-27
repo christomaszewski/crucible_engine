@@ -41,7 +41,35 @@
 
             <div class="toolbar-group">
                 <button class="btn" id="btn-add-agent">+ Agent</button>
-                <button class="btn" id="btn-place-agent">&#9906; Place</button>
+                <div class="split-btn" id="place-split-btn">
+                    <button class="btn split-btn-main" id="btn-place-agent">
+                        <span class="place-icon" id="place-icon"></span>
+                        <span id="place-label">Place UxV</span>
+                    </button>
+                    <button class="btn split-btn-arrow" id="btn-place-dropdown">&#9662;</button>
+                    <div class="split-btn-menu" id="place-menu">
+                        <div class="split-btn-item" data-type="uxv">
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                            UxV
+                        </div>
+                        <div class="split-btn-item" data-type="uav">
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><path d="M12 6l-6 4h4v4H6l6 4 6-4h-4v-4h4z" fill="currentColor"/></svg>
+                            UAV
+                        </div>
+                        <div class="split-btn-item" data-type="usv">
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><path d="M4 14c2-2 4 0 6-2s4 0 6-2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 14v-4l4-3 4 3v4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            USV
+                        </div>
+                        <div class="split-btn-item" data-type="ugv">
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="16" r="2" fill="currentColor"/><circle cx="16" cy="16" r="2" fill="currentColor"/></svg>
+                            UGV
+                        </div>
+                        <div class="split-btn-item" data-type="uuv">
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="20" y1="12" x2="22" y2="10" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="12" r="1" fill="currentColor"/></svg>
+                            UUV
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="toolbar-sep"></div>
@@ -173,6 +201,7 @@
     <div id="toast-container"></div>
 
     <!-- Scripts -->
+    <script src="js/icons.js"></script>
     <script src="js/ws.js"></script>
     <script src="js/map.js"></script>
     <script src="js/agents.js"></script>

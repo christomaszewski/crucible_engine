@@ -5,7 +5,7 @@
 const Agents = (() => {
     const agents = {};  // agent_id -> { lat, lon, alt, heading, sensors, domain_id, vehicle_type, vehicle_class, stack_status }
     let selectedId = null;
-    const typeCounters = {};  // vehicle_type -> next number
+    let globalCounter = 1;  // next agent number (globally unique)
 
     function getAll() { return agents; }
     function getSelected() { return selectedId; }
@@ -23,6 +23,15 @@ const Agents = (() => {
             vehicle_class: data.vehicle_class || '',
             stack_status: 'STOPPED',
         };
+
+        // Sync global counter past any existing agent numbers
+        const match = id.match(/_(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num >= globalCounter) {
+                globalCounter = num + 1;
+            }
+        }
 
         MapView.addAgent(id, agents[id].lat, agents[id].lon);
         renderList();
@@ -79,6 +88,7 @@ const Agents = (() => {
         list.innerHTML = ids.map(id => {
             const a = agents[id];
             const selected = id === selectedId ? 'selected' : '';
+            const vtype = (a.vehicle_type || Icons.getTypeFromId(id)).toLowerCase();
             const sensorBadges = (a.sensors || [])
                 .map(s => `<span class="sensor-badge">${s}</span>`)
                 .join('');
@@ -87,7 +97,10 @@ const Agents = (() => {
             return `
                 <div class="agent-card ${selected}" data-id="${id}">
                     <div class="agent-card-header">
-                        <span class="agent-id">${id}</span>
+                        <span class="agent-id">
+                            <span class="agent-type-icon type-${vtype}">${Icons.getSvg(vtype)}</span>
+                            ${id}
+                        </span>
                         <span class="agent-status ${statusClass}"></span>
                     </div>
                     <div class="agent-meta">
@@ -114,9 +127,17 @@ const Agents = (() => {
             return;
         }
 
+        const dvtype = (agent.vehicle_type || Icons.getTypeFromId(agentId)).toLowerCase();
         panel.innerHTML = `
             <div class="detail-section">
-                <div class="detail-title">Agent: ${agentId}</div>
+                <div class="detail-title">
+                    <span class="agent-type-icon type-${dvtype}">${Icons.getSvg(dvtype)}</span>
+                    Agent: ${agentId}
+                </div>
+                <div class="form-row">
+                    <label class="form-label">Type</label>
+                    <span class="form-input" style="border:none; background:none; color:var(--text-primary);">${Icons.getLabel(dvtype)}${agent.vehicle_class ? ' / ' + agent.vehicle_class : ''}</span>
+                </div>
                 <div class="form-row">
                     <label class="form-label">Domain</label>
                     <span class="form-input" style="border:none; background:none; color:var(--text-primary);">${agent.domain_id}</span>
@@ -195,20 +216,23 @@ const Agents = (() => {
         }
     }
 
+    function _nextAvailableNumber() {
+        let num = globalCounter;
+        while (true) {
+            const numStr = String(num).padStart(2, '0');
+            const numberInUse = Object.keys(agents).some(existingId => {
+                const match = existingId.match(/_(\d+)$/);
+                return match && match[1] === numStr;
+            });
+            if (!numberInUse) return num;
+            num++;
+        }
+    }
+
     function generateId(vehicleType = 'uxv') {
         const prefix = vehicleType.toLowerCase();
-        if (!typeCounters[prefix]) {
-            typeCounters[prefix] = 1;
-        }
-        // Find the next available number that doesn't collide
-        let num = typeCounters[prefix];
-        let id;
-        do {
-            id = `${prefix}_${String(num).padStart(2, '0')}`;
-            num++;
-        } while (agents[id]);
-        typeCounters[prefix] = num;
-        return id;
+        const num = _nextAvailableNumber();
+        return `${prefix}_${String(num).padStart(2, '0')}`;
     }
 
     function clear() {

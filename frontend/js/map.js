@@ -39,12 +39,14 @@ const MapView = (() => {
     }
 
     function createAgentIcon(agentId, selected = false) {
-        const label = agentId.length > 3 ? agentId.slice(-3) : agentId;
+        const vtype = Icons.getTypeFromId(agentId);
+        const svg = Icons.getSvg(vtype);
+        const selClass = selected ? 'selected' : '';
         return L.divIcon({
             className: '',
-            html: `<div class="agent-marker ${selected ? 'selected' : ''}">${label}</div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
+            html: `<div class="agent-marker type-${vtype} ${selClass}">${svg}</div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
         });
     }
 

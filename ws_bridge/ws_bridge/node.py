@@ -246,17 +246,50 @@ class WsBridgeNode(Node):
         )
 
     async def _cmd_get_state(self, ws, data: dict) -> None:
-        """Send cached ground truth state for all known agents."""
+        """Send full agent state by querying SaveScenario for sensor/config data."""
+        import yaml
+
         agents = {}
-        for agent_id, gt in self._gt_cache.items():
-            agents[agent_id] = {
-                "lat": gt.get("lat", 0.0),
-                "lon": gt.get("lon", 0.0),
-                "alt": gt.get("alt", 0.0),
-                "heading": gt.get("heading", 0.0),
-                "sensors": gt.get("sensors", []),
-                "domain_id": gt.get("domain_id", 0),
-            }
+
+        # Try to get full state from SaveScenario service
+        try:
+            req = SaveScenario.Request()
+            req.file_path = ""
+            future = self._cli_save.call_async(req)
+            result = await self._await_future(future)
+
+            if result.success and result.config_yaml:
+                config = yaml.safe_load(result.config_yaml)
+                sim_time = config.get("sim", {}).get("sim_time_s", 0.0)
+
+                for agent_id, agent_cfg in config.get("agents", {}).items():
+                    pose = agent_cfg.get("initial_pose", {})
+                    sensors_cfg = agent_cfg.get("sensors", {})
+                    agents[agent_id] = {
+                        "lat": pose.get("lat", 0.0),
+                        "lon": pose.get("lon", 0.0),
+                        "alt": pose.get("alt", 0.0),
+                        "heading": pose.get("heading", 0.0),
+                        "sensors": list(sensors_cfg.keys()),
+                        "domain_id": agent_cfg.get("domain_id", 0),
+                        "vehicle_type": agent_cfg.get("vehicle_type", ""),
+                        "vehicle_class": agent_cfg.get("vehicle_class", ""),
+                    }
+        except Exception as e:
+            self.get_logger().error(f"Failed to get state via SaveScenario: {e}")
+            # Fall back to ground truth cache
+            for agent_id, gt in self._gt_cache.items():
+                agents[agent_id] = {
+                    "lat": gt.get("lat", 0.0),
+                    "lon": gt.get("lon", 0.0),
+                    "alt": gt.get("alt", 0.0),
+                    "heading": gt.get("heading", 0.0),
+                    "sensors": gt.get("sensors", []),
+                    "domain_id": gt.get("domain_id", 0),
+                    "vehicle_type": gt.get("vehicle_type", ""),
+                    "vehicle_class": gt.get("vehicle_class", ""),
+                }
+
         await ws.send(json.dumps({
             "type": "state",
             "data": {"agents": agents},
