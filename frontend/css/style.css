@@ -450,82 +450,153 @@ html, body {
 /* -- Sensor expandable cards -------------------------------------------- */
 
 .sensor-card {
-    border: 1px solid var(--border);
     border-radius: var(--radius);
-    margin-bottom: 6px;
-    overflow: hidden;
+    margin-bottom: 4px;
+    background: var(--bg-tertiary);
 }
 
 .sensor-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 8px;
+    padding: 5px 8px;
     cursor: pointer;
-    background: var(--bg-tertiary);
-    border-left: 2px solid var(--accent);
-    transition: background 0.15s;
+    border-radius: var(--radius);
+    transition: background 0.12s;
+}
+
+.sensor-card.expanded .sensor-card-header {
+    border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .sensor-card-header:hover {
-    background: var(--bg-primary);
+    background: rgba(255, 255, 255, 0.04);
 }
 
-.sensor-card-toggle {
-    font-size: 10px;
+.sensor-card-title {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.sensor-card-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.sensor-card-info {
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+}
+
+.sensor-card-chevron {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-muted);
     transition: transform 0.15s;
 }
 
-.sensor-card.expanded .sensor-card-toggle {
+.sensor-card-chevron::after {
+    content: '';
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+}
+
+.sensor-card.expanded .sensor-card-chevron {
     transform: rotate(180deg);
 }
 
 .sensor-card-body {
     display: none;
-    padding: 8px;
-    font-size: 11px;
-    border-top: 1px solid var(--border);
+    padding: 4px 8px 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .sensor-card.expanded .sensor-card-body {
     display: block;
 }
 
-.sensor-detail-row {
+.sensor-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     padding: 2px 0;
-    color: var(--text-secondary);
     font-family: var(--font-mono);
     font-size: 10px;
 }
 
-.sensor-detail-key {
+.sensor-key {
     color: var(--text-muted);
+    flex-shrink: 0;
     margin-right: 8px;
 }
 
-.sensor-detail-topic {
-    word-break: break-all;
+.sensor-val {
+    color: var(--text-secondary);
     text-align: right;
-    color: var(--accent);
+    word-break: break-all;
 }
 
-.sensor-detail-divider {
-    margin-top: 4px;
-    padding: 2px 0;
+.sensor-val.topic {
+    color: var(--accent);
+    font-size: 9px;
+    opacity: 0.8;
+}
+
+.sensor-val.editable {
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 0 3px;
+    border-radius: 2px;
+    transition: background 0.12s;
+}
+
+.sensor-val.editable:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.sensor-inline-input {
+    width: 60px;
+    padding: 0 2px;
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    outline: none;
+    text-align: right;
+}
+
+.sensor-group-label {
+    margin-top: 3px;
+    padding-top: 3px;
     font-size: 9px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.sensor-remove-btn {
+.sensor-card-actions {
     margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sensor-card-actions .btn {
     width: 100%;
+    font-size: 10px;
+    padding: 3px 0;
 }
 
 /* -- Detail panel (right side of sidebar or overlay) -------------------- */

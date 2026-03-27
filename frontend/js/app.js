@@ -39,7 +39,6 @@ const App = (() => {
         });
 
         WS.on('bridge:state', (data) => {
-            console.log('[State] Received bridge:state', JSON.stringify(data).substring(0, 500));
             const backendVersion = data.state_version || 0;
             const uiVersion = Agents.getLastKnownVersion();
             const uiAgents = Agents.getAll();
@@ -69,7 +68,6 @@ const App = (() => {
                             });
                         } else {
                             // Merge enriched data into existing agent
-                            console.log('[State] Merging into existing agent', id, 'sensors:', agentData.sensors, 'configs:', agentData.sensor_configs);
                             if (agentData.sensors) existing.sensors = agentData.sensors;
                             if (agentData.sensor_configs) existing.sensor_configs = agentData.sensor_configs;
                             if (agentData.vehicle_type) existing.vehicle_type = agentData.vehicle_type;
