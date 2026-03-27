@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" fill="none">
+  <!-- CRUCIBLE — standalone icon + wordmark, crucible held by robotic arms -->
+  <defs>
+    <!-- Molten gold gradient (top-down) -->
+    <linearGradient id="molten" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD54F"/>
+      <stop offset="40%" stop-color="#FF9800"/>
+      <stop offset="100%" stop-color="#E65100"/>
+    </linearGradient>
+    <!-- Rim metallic gradient -->
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B0BEC5"/>
+      <stop offset="50%" stop-color="#78909C"/>
+      <stop offset="100%" stop-color="#546E7A"/>
+    </linearGradient>
+    <!-- Arm metallic gradient left -->
+    <linearGradient id="armL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#90A4AE"/>
+      <stop offset="50%" stop-color="#607D8B"/>
+      <stop offset="100%" stop-color="#455A64"/>
+    </linearGradient>
+    <!-- Arm metallic gradient right -->
+    <linearGradient id="armR" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#90A4AE"/>
+      <stop offset="50%" stop-color="#607D8B"/>
+      <stop offset="100%" stop-color="#455A64"/>
+    </linearGradient>
+    <!-- Vessel body gradient -->
+    <linearGradient id="vessel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#546E7A"/>
+      <stop offset="100%" stop-color="#263238"/>
+    </linearGradient>
+    <!-- Text gradient -->
+    <linearGradient id="textGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD54F"/>
+      <stop offset="60%" stop-color="#FFB300"/>
+      <stop offset="100%" stop-color="#E65100"/>
+    </linearGradient>
+    <!-- Glow filters -->
+    <filter id="glowBig">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowMed">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowSm">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+    <filter id="innerGlow">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <!-- Drop shadow for icon -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <!-- Clip for molten contents -->
+    <clipPath id="vesselClip">
+      <path d="M60,52 Q65,48 100,48 Q135,48 140,52 L130,130 Q128,148 100,148 Q72,148 70,130 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="800" height="200" rx="12" fill="#1A1D23"/>
+
+  <!-- ===== ICON GROUP (centered at x=100) ===== -->
+  <g transform="translate(5, 12)" filter="url(#shadow)">
+
+    <!-- Left robotic arm -->
+    <g>
+      <!-- Upper arm segment -->
+      <path d="M52,60 C38,75 30,95 32,110" stroke="url(#armL)" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <!-- Forearm segment -->
+      <path d="M32,110 C34,125 42,140 56,150" stroke="url(#armL)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <!-- Lower arm to joint -->
+      <path d="M56,150 C65,156 75,160 85,162" stroke="url(#armL)" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <!-- Shoulder joint -->
+      <circle cx="52" cy="60" r="6" fill="#78909C" stroke="#90A4AE" stroke-width="2"/>
+      <circle cx="52" cy="60" r="2.5" fill="#B0BEC5"/>
+      <!-- Elbow joint -->
+      <circle cx="32" cy="110" r="5" fill="#78909C" stroke="#90A4AE" stroke-width="2"/>
+      <circle cx="32" cy="110" r="2" fill="#B0BEC5"/>
+      <!-- Wrist joint -->
+      <circle cx="56" cy="150" r="4.5" fill="#78909C" stroke="#90A4AE" stroke-width="2"/>
+      <circle cx="56" cy="150" r="1.8" fill="#B0BEC5"/>
+      <!-- Bottom joint -->
+      <circle cx="85" cy="162" r="6" fill="#607D8B" stroke="#90A4AE" stroke-width="2.5"/>
+      <circle cx="85" cy="162" r="2.5" fill="#CFD8DC"/>
+    </g>
+
+    <!-- Right robotic arm (mirrored) -->
+    <g>
+      <!-- Upper arm segment -->
+      <path d="M148,60 C162,75 170,95 168,110" stroke="url(#armR)" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <!-- Forearm segment -->
+      <path d="M168,110 C166,125 158,140 144,150" stroke="url(#armR)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <!-- Lower arm to joint -->
+      <path d="M144,150 C135,156 125,160 115,162" stroke="url(#armR)" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <!-- Shoulder joint -->
+      <circle cx="148" cy="60" r="6" fill="#78909C" stroke="#90A4AE" stroke-width="2"/>
+      <circle cx="148" cy="60" r="2.5" fill="#B0BEC5"/>
+      <!-- Elbow joint -->
+      <circle cx="168" cy="110" r="5" fill="#78909C" stroke="#90A4AE" stroke-width="2"/>
+      <circle cx="168" cy="110" r="2" fill="#B0BEC5"/>
+      <!-- Wrist joint -->
+      <circle cx="144" cy="150" r="4.5" fill="#78909C" stroke="#90A4AE" stroke-width="2"/>
+      <circle cx="144" cy="150" r="1.8" fill="#B0BEC5"/>
+      <!-- Bottom joint -->
+      <circle cx="115" cy="162" r="6" fill="#607D8B" stroke="#90A4AE" stroke-width="2.5"/>
+      <circle cx="115" cy="162" r="2.5" fill="#CFD8DC"/>
+    </g>
+
+    <!-- Crucible vessel body -->
+    <path d="M60,52 Q65,48 100,48 Q135,48 140,52 L130,130 Q128,148 100,148 Q72,148 70,130 Z"
+          fill="url(#vessel)" stroke="#78909C" stroke-width="3"/>
+
+    <!-- Vessel rim (wide elliptical top) -->
+    <ellipse cx="100" cy="50" rx="42" ry="10" fill="url(#rim)" stroke="#90A4AE" stroke-width="2"/>
+    <!-- Rim highlight -->
+    <ellipse cx="100" cy="48" rx="34" ry="5" fill="none" stroke="#B0BEC5" stroke-width="1" opacity="0.5"/>
+
+    <!-- Molten contents (clipped to vessel) -->
+    <g clip-path="url(#vesselClip)">
+      <!-- Molten fill -->
+      <rect x="60" y="42" width="80" height="110" fill="url(#molten)" opacity="0.9"/>
+      <!-- Surface glow -->
+      <ellipse cx="100" cy="52" rx="36" ry="10" fill="#FFD54F" opacity="0.6"/>
+      <!-- Deep inner glow -->
+      <ellipse cx="100" cy="80" rx="28" ry="30" fill="#FF9800" opacity="0.15" filter="url(#innerGlow)"/>
+
+      <!-- Network nodes -->
+      <g filter="url(#glowMed)">
+        <circle cx="86" cy="68" r="3.5" fill="#FFD54F" opacity="0.95"/>
+        <circle cx="114" cy="72" r="3" fill="#FFD54F" opacity="0.9"/>
+        <circle cx="96" cy="88" r="3.5" fill="#FFCC02" opacity="0.9"/>
+        <circle cx="110" cy="96" r="2.8" fill="#FFB300" opacity="0.85"/>
+        <circle cx="82" cy="100" r="2.5" fill="#FFB300" opacity="0.8"/>
+        <circle cx="100" cy="112" r="3" fill="#FF9800" opacity="0.85"/>
+        <circle cx="88" cy="124" r="2.5" fill="#E65100" opacity="0.7"/>
+        <circle cx="112" cy="120" r="2.2" fill="#E65100" opacity="0.7"/>
+      </g>
+
+      <!-- Network connections -->
+      <g stroke="#FFD54F" stroke-width="1" opacity="0.35">
+        <line x1="86" y1="68" x2="114" y2="72"/>
+        <line x1="86" y1="68" x2="96" y2="88"/>
+        <line x1="114" y1="72" x2="110" y2="96"/>
+        <line x1="114" y1="72" x2="96" y2="88"/>
+        <line x1="96" y1="88" x2="82" y2="100"/>
+        <line x1="96" y1="88" x2="110" y2="96"/>
+        <line x1="110" y1="96" x2="100" y2="112"/>
+        <line x1="82" y1="100" x2="100" y2="112"/>
+        <line x1="82" y1="100" x2="88" y2="124"/>
+        <line x1="100" y1="112" x2="88" y2="124"/>
+        <line x1="100" y1="112" x2="112" y2="120"/>
+      </g>
+
+      <!-- Pour stream narrowing down from center bottom -->
+      <path d="M94,148 Q100,160 100,175 Q100,160 106,148"
+            fill="url(#molten)" opacity="0.8"/>
+    </g>
+
+    <!-- Ambient glow around molten surface -->
+    <ellipse cx="100" cy="50" rx="44" ry="14" fill="#FF9800" opacity="0.1" filter="url(#glowBig)"/>
+
+  </g>
+
+  <!-- ===== WORDMARK ===== -->
+  <text x="230" y="125" fill="url(#textGrad)" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="80" font-weight="700" letter-spacing="8px">CRUCIBLE</text>
+
+  <!-- Subtle text glow -->
+  <text x="230" y="125" fill="#FF9800" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="80" font-weight="700" letter-spacing="8px" opacity="0.08" filter="url(#glowSm)">CRUCIBLE</text>
+
+  <!-- Tagline -->
+  <text x="234" y="152" fill="#607D8B" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="14" letter-spacing="6px">MULTI-AGENT SIMULATION FRAMEWORK</text>
+</svg>
