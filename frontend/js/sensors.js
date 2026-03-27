@@ -42,13 +42,14 @@ const Sensors = (() => {
         const area = document.getElementById('sensor-config-area');
         if (!area) return;
 
+        const agent = Agents.getAll()[agentId];
+        const configs = agent?.sensor_configs || {};
+        console.log('[Sensors] renderSensorConfig', agentId, 'names:', sensorNames, 'configs:', configs);
+
         if (!sensorNames || sensorNames.length === 0) {
             area.innerHTML = '<div style="color: var(--text-muted); font-size: 11px;">No sensors configured</div>';
             return;
         }
-
-        const agent = Agents.getAll()[agentId];
-        const configs = agent?.sensor_configs || {};
 
         area.innerHTML = sensorNames.map(name => {
             const cfg = configs[name] || SENSOR_DEFAULTS[name] || {};
