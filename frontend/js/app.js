@@ -123,6 +123,12 @@ const App = (() => {
             Agents.setSortMode(e.target.value);
         });
 
+        document.getElementById('sort-dir-btn').addEventListener('click', () => {
+            Agents.toggleSortDirection();
+            document.getElementById('sort-dir-btn').innerHTML =
+                Agents.isSortAscending() ? '&#9650;' : '&#9660;';
+        });
+
         // Map type filter checkboxes
         document.querySelectorAll('#map-filter input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', () => {

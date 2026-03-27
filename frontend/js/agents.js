@@ -6,7 +6,8 @@ const Agents = (() => {
     const agents = {};  // agent_id -> { lat, lon, alt, heading, sensors, domain_id, vehicle_type, vehicle_class, stack_status }
     let selectedId = null;
     let lastKnownVersion = 0;  // last state_version received from backend
-    let sortMode = 'id';  // 'id', 'type', 'domain'
+    let sortMode = 'id';  // 'id', 'type', 'altitude'
+    let sortAscending = true;
 
     function getAll() { return agents; }
     function getSelected() { return selectedId; }
@@ -89,6 +90,13 @@ const Agents = (() => {
         renderList();
     }
 
+    function toggleSortDirection() {
+        sortAscending = !sortAscending;
+        renderList();
+    }
+
+    function isSortAscending() { return sortAscending; }
+
     function _isUuv(id) {
         const a = agents[id];
         return (a.vehicle_type || Icons.getTypeFromId(id)).toLowerCase() === 'uuv';
@@ -132,16 +140,26 @@ const Agents = (() => {
     function renderList() {
         const list = document.getElementById('agent-list');
         const ids = Object.keys(agents).sort();
+        const dir = sortAscending ? 1 : -1;
         document.getElementById('agent-count').textContent = ids.length;
+
+        // Apply sort direction to ID-sorted list
+        const sortedIds = sortAscending ? ids : [...ids].reverse();
 
         let html = '';
 
         if (sortMode === 'type') {
-            const typeOrder = ['uav', 'usv', 'ugv', 'uuv', 'uxv'];
+            const typeOrder = sortAscending
+                ? ['uav', 'usv', 'ugv', 'uuv', 'uxv']
+                : ['uxv', 'uuv', 'ugv', 'usv', 'uav'];
             const groups = {};
             for (const id of ids) {
                 const vtype = (agents[id].vehicle_type || Icons.getTypeFromId(id)).toLowerCase();
                 (groups[vtype] = groups[vtype] || []).push(id);
+            }
+            // Reverse within-group order if descending
+            if (!sortAscending) {
+                for (const arr of Object.values(groups)) arr.reverse();
             }
             for (const t of typeOrder) {
                 if (!groups[t] || groups[t].length === 0) continue;
@@ -155,11 +173,12 @@ const Agents = (() => {
                 html += groups[t].map(_agentCardHtml).join('');
             }
         } else if (sortMode === 'altitude') {
-            // Sort by altitude descending (highest first), depth (most negative) last
-            const sorted = [...ids].sort((a, b) => (agents[b].alt || 0) - (agents[a].alt || 0));
+            const sorted = [...ids].sort((a, b) =>
+                dir * ((agents[a].alt || 0) - (agents[b].alt || 0))
+            );
             html = sorted.map(_agentCardHtml).join('');
         } else {
-            html = ids.map(_agentCardHtml).join('');
+            html = sortedIds.map(_agentCardHtml).join('');
         }
 
         list.innerHTML = html;
@@ -386,6 +405,8 @@ const Agents = (() => {
         generateId,
         renderList,
         setSortMode,
+        toggleSortDirection,
+        isSortAscending,
         updateSummary,
         clear,
         getLastKnownVersion,

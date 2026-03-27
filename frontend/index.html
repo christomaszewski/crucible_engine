@@ -95,11 +95,14 @@
             <div class="sidebar-section">
                 <div class="sidebar-header" id="agents-header">
                     <span>Agents <span class="count" id="agent-count">0</span></span>
-                    <select class="sort-select" id="agent-sort">
-                        <option value="id">By ID</option>
-                        <option value="type">By Type</option>
-                        <option value="altitude">By Alt/Depth</option>
-                    </select>
+                    <span class="sort-group">
+                        <select class="sort-select" id="agent-sort">
+                            <option value="id">By ID</option>
+                            <option value="type">By Type</option>
+                            <option value="altitude">By Alt/Depth</option>
+                        </select>
+                        <button class="sort-dir-btn" id="sort-dir-btn" title="Toggle sort direction">&#9650;</button>
+                    </span>
                 </div>
             </div>
             <div id="agent-list"></div>
