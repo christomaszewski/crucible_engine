@@ -275,6 +275,18 @@ const Agents = (() => {
             el.addEventListener('click', () => _startPoseEdit(el, agentId));
         });
 
+        // Clicking anywhere outside an active pose input commits it
+        panel.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('.pose-inline-input')) {
+                const active = panel.querySelector('.pose-inline-input');
+                if (active) active.blur();
+            }
+        });
+        document.getElementById('map').addEventListener('mousedown', () => {
+            const active = panel.querySelector('.pose-inline-input');
+            if (active) active.blur();
+        });
+
         // Event listeners
         document.getElementById('btn-add-sensor').addEventListener('click', () => {
             Sensors.showAddSensorDialog(agentId);
