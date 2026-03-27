@@ -162,15 +162,15 @@ class SimEngineNode(Node):
             SetSpeed, "/sim/set_speed", self._srv_set_speed
         )
 
-        # Load config file if provided
+        # Sim loop timer — period = sim_dt / speed (or uncapped if speed == 0)
+        self._timer = self._create_tick_timer()
+
+        # Load config file if provided (must be after timer creation)
         config_file = (
             self.get_parameter("config_file").get_parameter_value().string_value
         )
         if config_file:
             self._load_config_file(config_file)
-
-        # Sim loop timer — period = sim_dt / speed (or uncapped if speed == 0)
-        self._timer = self._create_tick_timer()
 
         self.get_logger().info(
             f"CRUCIBLE sim engine started: sim_dt={self._sim_dt:.4f}s, speed={self._speed_multiplier:.1f}x"

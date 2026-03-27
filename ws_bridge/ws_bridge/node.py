@@ -12,6 +12,7 @@ import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 
+from rosgraph_msgs.msg import Clock
 from crucible_msgs.msg import GroundTruth
 from crucible_msgs.srv import (
     AddAgent,
@@ -65,6 +66,11 @@ class WsBridgeNode(Node):
 
         # Monotonic version counter (resets to 0 on restart)
         self._state_version: int = 0
+
+        # Subscribe to /clock for sim time
+        self._clock_sub = self.create_subscription(
+            Clock, "/clock", self._on_clock, 10
+        )
 
         # Periodically scan for ground truth topics to auto-subscribe
         self._discovery_timer = self.create_timer(2.0, self._discover_agents)
@@ -418,6 +424,23 @@ class WsBridgeNode(Node):
             "message": "State restored from UI",
             "success": True,
             "state_version": self._state_version,
+        })
+
+    # -- Clock subscription --------------------------------------------------
+
+    _last_clock_broadcast: float = 0.0
+
+    def _on_clock(self, msg: Clock) -> None:
+        """Forward /clock to frontend, throttled to ~10 Hz."""
+        sim_time = msg.clock.sec + msg.clock.nanosec * 1e-9
+        import time
+        now = time.monotonic()
+        if now - self._last_clock_broadcast < 0.1:
+            return
+        self._last_clock_broadcast = now
+        self.broadcast_sync({
+            "type": "sim_clock",
+            "sim_time": sim_time,
         })
 
     # -- Agent discovery -----------------------------------------------------

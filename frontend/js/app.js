@@ -31,6 +31,9 @@ const App = (() => {
         WS.on('bridge:ground_truth', (data) => {
             Agents.updateGroundTruth(data);
             Accuracy.updateGroundTruth(data);
+        });
+
+        WS.on('bridge:sim_clock', (data) => {
             SimControl.updateTime(data.sim_time || 0);
         });
 
