@@ -293,7 +293,30 @@ const App = (() => {
         }, 3000);
     }
 
-    return { init, toast, updatePlaceButton };
+    function updateHotkeyOverlay() {
+        const overlay = document.getElementById('hotkey-overlay');
+        const selectedId = Agents.getSelected();
+        if (!selectedId) {
+            overlay.classList.remove('visible');
+            return;
+        }
+        const agentData = Agents.getAll()[selectedId] || {};
+        const vtype = (agentData.vehicle_type || Icons.getTypeFromId(selectedId)).toLowerCase();
+
+        let lines = [
+            '<kbd>R</kbd> Set heading',
+        ];
+        if (vtype === 'uuv') {
+            lines.push('<kbd>A</kbd> Set depth');
+        } else if (vtype !== 'ugv' && vtype !== 'usv') {
+            lines.push('<kbd>A</kbd> Set altitude');
+        }
+        lines.push('<kbd>ESC</kbd> Cancel / deselect');
+        overlay.innerHTML = lines.join('<br>');
+        overlay.classList.add('visible');
+    }
+
+    return { init, toast, updatePlaceButton, updateHotkeyOverlay };
 })();
 
 // Boot

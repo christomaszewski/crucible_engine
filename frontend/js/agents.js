@@ -74,17 +74,33 @@ const Agents = (() => {
             MapView.selectAgent(null);
             hideDetail();
             renderList();
+            if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
             return;
         }
         selectedId = agentId;
         MapView.selectAgent(agentId);
         renderList();
         showDetail(agentId);
+        if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
     }
 
     function setSortMode(mode) {
         sortMode = mode;
         renderList();
+    }
+
+    function _isUuv(id) {
+        const a = agents[id];
+        return (a.vehicle_type || Icons.getTypeFromId(id)).toLowerCase() === 'uuv';
+    }
+
+    function _altLabel(id) {
+        return _isUuv(id) ? 'Depth' : 'Alt';
+    }
+
+    function _altDisplay(id) {
+        const alt = agents[id].alt || 0;
+        return _isUuv(id) ? Math.abs(alt).toFixed(1) : alt.toFixed(1);
     }
 
     function _agentCardHtml(id) {
@@ -106,7 +122,7 @@ const Agents = (() => {
                     <span class="agent-status ${statusClass}"></span>
                 </div>
                 <div class="agent-meta">
-                    ${a.lat.toFixed(6)}, ${a.lon.toFixed(6)} | ${a.alt.toFixed(1)}m
+                    ${a.lat.toFixed(6)}, ${a.lon.toFixed(6)} | ${_altLabel(id)}: ${_altDisplay(id)}m
                 </div>
                 <div class="agent-sensors">${sensorBadges}</div>
             </div>
@@ -138,17 +154,10 @@ const Agents = (() => {
                 html += `<div class="agent-group-header">${t.toUpperCase()}</div>`;
                 html += groups[t].map(_agentCardHtml).join('');
             }
-        } else if (sortMode === 'domain') {
-            const groups = {};
-            for (const id of ids) {
-                const d = agents[id].domain_id || 0;
-                (groups[d] = groups[d] || []).push(id);
-            }
-            const domains = Object.keys(groups).map(Number).sort((a, b) => a - b);
-            for (const d of domains) {
-                html += `<div class="agent-group-header">Domain ${d}</div>`;
-                html += groups[d].map(_agentCardHtml).join('');
-            }
+        } else if (sortMode === 'altitude') {
+            // Sort by altitude descending (highest first), depth (most negative) last
+            const sorted = [...ids].sort((a, b) => (agents[b].alt || 0) - (agents[a].alt || 0));
+            html = sorted.map(_agentCardHtml).join('');
         } else {
             html = ids.map(_agentCardHtml).join('');
         }
@@ -163,6 +172,11 @@ const Agents = (() => {
         });
     }
 
+    function _isEditable() {
+        const s = SimControl.getStatus();
+        return s !== 'RUNNING';
+    }
+
     function showDetail(agentId) {
         const panel = document.getElementById('detail-panel');
         const agent = agents[agentId];
@@ -172,6 +186,15 @@ const Agents = (() => {
         }
 
         const dvtype = (agent.vehicle_type || Icons.getTypeFromId(agentId)).toLowerCase();
+        const isUuv = dvtype === 'uuv';
+        const altLabel = isUuv ? 'Depth' : 'Altitude';
+        const altVal = isUuv ? Math.abs(agent.alt).toFixed(1) : agent.alt.toFixed(1);
+        const headingDeg = ((agent.heading || 0) * 180 / Math.PI).toFixed(1);
+        const editable = _isEditable();
+        const dis = editable ? '' : 'disabled';
+        // UGV/USV have no altitude control
+        const noAlt = dvtype === 'ugv' || dvtype === 'usv';
+
         panel.innerHTML = `
             <button class="detail-close" id="detail-close">&times;</button>
             <div class="detail-section">
@@ -181,22 +204,30 @@ const Agents = (() => {
                 </div>
                 <div class="form-row">
                     <label class="form-label">Type</label>
-                    <span class="form-input" style="border:none; background:none; color:var(--text-primary);">${Icons.getLabel(dvtype)}${agent.vehicle_class ? ' / ' + agent.vehicle_class : ''}</span>
+                    <span class="detail-value">${Icons.getLabel(dvtype)}${agent.vehicle_class ? ' / ' + agent.vehicle_class : ''}</span>
                 </div>
                 <div class="form-row">
-                    <label class="form-label">Domain</label>
-                    <span class="form-input" style="border:none; background:none; color:var(--text-primary);">${agent.domain_id}</span>
+                    <label class="form-label">DDS Domain</label>
+                    <span class="detail-value">${agent.domain_id}</span>
                 </div>
                 <div class="form-row">
-                    <label class="form-label">Position</label>
-                    <span class="form-input" style="border:none; background:none; color:var(--text-primary);">
-                        ${agent.lat.toFixed(6)}, ${agent.lon.toFixed(6)}
-                    </span>
+                    <label class="form-label">Latitude</label>
+                    <input class="form-input detail-edit" id="detail-lat" type="number" step="any" value="${agent.lat.toFixed(6)}" ${dis}>
                 </div>
                 <div class="form-row">
-                    <label class="form-label">Altitude</label>
-                    <span class="form-input" style="border:none; background:none; color:var(--text-primary);">${agent.alt.toFixed(1)} m</span>
+                    <label class="form-label">Longitude</label>
+                    <input class="form-input detail-edit" id="detail-lon" type="number" step="any" value="${agent.lon.toFixed(6)}" ${dis}>
                 </div>
+                <div class="form-row">
+                    <label class="form-label">Heading (&deg;)</label>
+                    <input class="form-input detail-edit" id="detail-heading" type="number" step="0.1" value="${headingDeg}" ${dis}>
+                </div>
+                ${noAlt ? '' : `
+                <div class="form-row">
+                    <label class="form-label">${altLabel} (m)</label>
+                    <input class="form-input detail-edit" id="detail-alt" type="number" step="0.1" min="0" value="${altVal}" ${dis}>
+                </div>
+                `}
             </div>
             <div class="detail-section">
                 <div class="detail-title">Sensors</div>
@@ -224,6 +255,35 @@ const Agents = (() => {
             MapView.selectAgent(null);
             hideDetail();
             renderList();
+        });
+
+        // Editable field commit on change
+        const commitPose = () => {
+            const lat = parseFloat(document.getElementById('detail-lat').value);
+            const lon = parseFloat(document.getElementById('detail-lon').value);
+            const hdgDeg = parseFloat(document.getElementById('detail-heading').value);
+            const hdgRad = hdgDeg * Math.PI / 180;
+            const altInput = document.getElementById('detail-alt');
+            let alt = agent.alt;
+            if (altInput) {
+                const raw = parseFloat(altInput.value);
+                alt = isUuv ? -Math.abs(raw) : Math.max(0, raw);
+            }
+            agent.lat = lat;
+            agent.lon = lon;
+            agent.heading = hdgRad;
+            agent.alt = alt;
+            WS.sendBridge({
+                cmd: 'set_pose',
+                agent_id: agentId,
+                lat, lon, alt, heading: hdgRad,
+            });
+            MapView.updateAgent(agentId, lat, lon, hdgRad);
+            renderList();
+        };
+
+        document.querySelectorAll('#detail-panel .detail-edit').forEach(input => {
+            input.addEventListener('change', commitPose);
         });
 
         // Event listeners

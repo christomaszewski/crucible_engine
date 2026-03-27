@@ -105,8 +105,10 @@ const MapView = (() => {
                 banner.textContent = `Heading: ${angleDeg.toFixed(1)}° — click to set, ESC to cancel`;
             } else if (adjustMode === 'altitude' || adjustMode === 'depth') {
                 const deltaY = adjustStartY - e.clientY; // up = positive
-                const scale = adjustMode === 'depth' ? -0.5 : 0.5; // depth: up = shallower (less negative)
-                const newAlt = adjustStartAlt + deltaY * scale;
+                const scale = adjustMode === 'depth' ? -0.5 : 0.5;
+                let newAlt = adjustStartAlt + deltaY * scale;
+                if (adjustMode === 'altitude') newAlt = Math.max(0, newAlt);
+                if (adjustMode === 'depth') newAlt = Math.min(0, newAlt);
                 adjustPendingValue = newAlt;
                 const label = adjustMode === 'depth' ? 'Depth' : 'Alt';
                 const displayVal = adjustMode === 'depth' ? Math.abs(newAlt).toFixed(1) : newAlt.toFixed(1);
@@ -168,8 +170,10 @@ const MapView = (() => {
         const marker = agentMarkers[adjustAgentId];
         const agentData = Agents.getAll()[adjustAgentId] || {};
         const pos = marker.getLatLng();
+        const commitId = adjustAgentId;
 
         if (adjustMode === 'heading' && adjustPendingValue != null) {
+            agentData.heading = adjustPendingValue;
             WS.sendBridge({
                 cmd: 'set_pose',
                 agent_id: adjustAgentId,
@@ -179,6 +183,7 @@ const MapView = (() => {
                 heading: adjustPendingValue,
             });
         } else if ((adjustMode === 'altitude' || adjustMode === 'depth') && adjustPendingValue != null) {
+            agentData.alt = adjustPendingValue;
             WS.sendBridge({
                 cmd: 'set_pose',
                 agent_id: adjustAgentId,
@@ -190,6 +195,10 @@ const MapView = (() => {
         }
 
         _exitAdjustMode();
+
+        // Refresh detail panel and list to reflect new values
+        if (Agents.getSelected() === commitId) Agents.refreshDetail(commitId);
+        Agents.renderList();
     }
 
     function _cancelAdjustment() {

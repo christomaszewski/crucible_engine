@@ -102,5 +102,7 @@ const SimControl = (() => {
         if (dtInput) dtInput.disabled = (simStatus !== 'READY');
     }
 
-    return { init, updateTime, setStatus, setDt };
+    function getStatus() { return simStatus; }
+
+    return { init, updateTime, setStatus, setDt, getStatus };
 })();

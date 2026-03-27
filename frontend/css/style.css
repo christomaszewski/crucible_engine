@@ -1159,6 +1159,61 @@ select.form-input {
     display: block;
 }
 
+/* Hotkey overlay */
+.hotkey-overlay {
+    position: absolute;
+    bottom: 40px;
+    right: 12px;
+    z-index: 800;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    pointer-events: none;
+    display: none;
+    line-height: 1.7;
+}
+
+.hotkey-overlay.visible {
+    display: block;
+}
+
+.hotkey-overlay kbd {
+    display: inline-block;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0 5px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    margin-right: 4px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* Detail panel editable fields */
+.detail-value {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.detail-edit {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 2px 6px;
+    width: 100%;
+}
+
+.detail-edit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .place-mode-banner {
     position: absolute;
     top: 12px;
