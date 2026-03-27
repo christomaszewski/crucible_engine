@@ -70,8 +70,11 @@ const MapView = (() => {
                 e.preventDefault();
                 _enterAdjustMode('heading', selectedId);
             } else if (e.key === 'a' || e.key === 'A') {
+                const agentData = Agents.getAll()[selectedId] || {};
+                const vtype = (agentData.vehicle_type || Icons.getTypeFromId(selectedId)).toLowerCase();
+                if (vtype === 'ugv' || vtype === 'usv') return; // no altitude adjust for ground/surface
                 e.preventDefault();
-                _enterAdjustMode('altitude', selectedId);
+                _enterAdjustMode(vtype === 'uuv' ? 'depth' : 'altitude', selectedId);
             }
         });
 
@@ -100,11 +103,26 @@ const MapView = (() => {
 
                 adjustPendingValue = angleDeg * Math.PI / 180;
                 banner.textContent = `Heading: ${angleDeg.toFixed(1)}° — click to set, ESC to cancel`;
-            } else if (adjustMode === 'altitude') {
+            } else if (adjustMode === 'altitude' || adjustMode === 'depth') {
                 const deltaY = adjustStartY - e.clientY; // up = positive
-                const newAlt = adjustStartAlt + deltaY * 0.5; // 0.5m per pixel
+                const scale = adjustMode === 'depth' ? -0.5 : 0.5; // depth: up = shallower (less negative)
+                const newAlt = adjustStartAlt + deltaY * scale;
                 adjustPendingValue = newAlt;
-                banner.textContent = `Altitude: ${newAlt.toFixed(1)}m — click to set, ESC to cancel`;
+                const label = adjustMode === 'depth' ? 'Depth' : 'Alt';
+                const displayVal = adjustMode === 'depth' ? Math.abs(newAlt).toFixed(1) : newAlt.toFixed(1);
+                banner.textContent = `${label}: ${displayVal}m — click to set, ESC to cancel`;
+
+                // Visual indicator near marker
+                const el = marker.getElement();
+                if (el) {
+                    let ind = el.querySelector('.altitude-indicator');
+                    if (!ind) {
+                        ind = document.createElement('div');
+                        ind.className = 'altitude-indicator';
+                        el.querySelector('.map-marker').appendChild(ind);
+                    }
+                    ind.textContent = `${label}: ${displayVal}m`;
+                }
             }
         });
     }
@@ -128,16 +146,17 @@ const MapView = (() => {
 
         if (mode === 'heading') {
             banner.textContent = `Move mouse around ${agentId} to set heading — click to set, ESC to cancel`;
-        } else if (mode === 'altitude') {
+        } else if (mode === 'altitude' || mode === 'depth') {
             const agentData = Agents.getAll()[agentId] || {};
             adjustStartAlt = agentData.alt || 0;
-            // Capture current mouse Y on next move
             adjustStartY = null;
             const captureStart = (e) => {
                 if (adjustStartY === null) adjustStartY = e.clientY;
             };
             document.addEventListener('mousemove', captureStart, { once: true });
-            banner.textContent = `Move mouse up/down to adjust ${agentId} altitude (${adjustStartAlt.toFixed(1)}m) — click to set, ESC to cancel`;
+            const label = mode === 'depth' ? 'depth' : 'altitude';
+            const displayVal = mode === 'depth' ? Math.abs(adjustStartAlt).toFixed(1) : adjustStartAlt.toFixed(1);
+            banner.textContent = `Move mouse up/down to adjust ${agentId} ${label} (${displayVal}m) — click to set, ESC to cancel`;
         }
 
         banner.classList.add('visible');
@@ -159,7 +178,7 @@ const MapView = (() => {
                 alt: agentData.alt || 0,
                 heading: adjustPendingValue,
             });
-        } else if (adjustMode === 'altitude' && adjustPendingValue != null) {
+        } else if ((adjustMode === 'altitude' || adjustMode === 'depth') && adjustPendingValue != null) {
             WS.sendBridge({
                 cmd: 'set_pose',
                 agent_id: adjustAgentId,
@@ -192,7 +211,15 @@ const MapView = (() => {
     function _exitAdjustMode() {
         if (adjustAgentId) {
             const marker = agentMarkers[adjustAgentId];
-            if (marker && marker.dragging) marker.dragging.enable();
+            if (marker) {
+                if (marker.dragging) marker.dragging.enable();
+                // Remove altitude/depth indicator
+                const el = marker.getElement();
+                if (el) {
+                    const ind = el.querySelector('.altitude-indicator');
+                    if (ind) ind.remove();
+                }
+            }
         }
         map.dragging.enable();
         document.getElementById('map-container').classList.remove('adjust-mode');

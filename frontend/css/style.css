@@ -1111,9 +1111,30 @@ select.form-input {
     cursor: crosshair;
 }
 
+/* Suppress browser focus outline on Leaflet marker icons */
+.leaflet-marker-icon:focus {
+    outline: none;
+}
+
 #map-container.adjust-mode,
 #map-container.adjust-mode * {
     cursor: crosshair !important;
+}
+
+.altitude-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -22px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.75);
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
 }
 
 .adjust-mode-banner {
