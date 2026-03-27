@@ -9,9 +9,12 @@ const MapView = (() => {
     let placeMode = false;
     let placeModeCallback = null;
 
-    // Heading rotation state
-    let rotatingAgentId = null;
-    let rotatingPendingHeading = null;
+    // Adjustment mode: null, 'heading', or 'altitude'
+    let adjustMode = null;
+    let adjustAgentId = null;
+    let adjustPendingValue = null;
+    let adjustStartAlt = 0;
+    let adjustStartY = 0;
 
     function init() {
         map = L.map('map', {
@@ -28,105 +31,175 @@ const MapView = (() => {
             maxZoom: 20,
         }).addTo(map);
 
-        // Click handler for place mode
+        // Click handler for place mode OR commit adjustment
         map.on('click', (e) => {
+            if (adjustMode) {
+                _commitAdjustment();
+                return;
+            }
             if (placeMode && placeModeCallback) {
                 placeModeCallback(e.latlng.lat, e.latlng.lng);
                 exitPlaceMode();
             }
         });
 
-        // ESC to cancel place mode
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && placeMode) {
-                exitPlaceMode();
-            }
-        });
-
-        // --- Heading rotation via right-click drag (delegated) ---
         const mapContainer = document.getElementById('map-container');
+        const banner = document.getElementById('adjust-banner');
 
-        // Suppress context menu on markers only
-        mapContainer.addEventListener('contextmenu', (e) => {
-            if (e.target.closest('.map-marker')) {
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // ESC cancels any active mode
+            if (e.key === 'Escape') {
+                if (adjustMode) {
+                    _cancelAdjustment();
+                    return;
+                }
+                if (placeMode) {
+                    exitPlaceMode();
+                    return;
+                }
+            }
+
+            // Ignore hotkeys when typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+            const selectedId = Agents.getSelected();
+            if (!selectedId || !agentMarkers[selectedId]) return;
+
+            if (e.key === 'r' || e.key === 'R') {
                 e.preventDefault();
+                _enterAdjustMode('heading', selectedId);
+            } else if (e.key === 'a' || e.key === 'A') {
+                e.preventDefault();
+                _enterAdjustMode('altitude', selectedId);
             }
         });
 
-        // Right-mousedown on a marker starts rotation
-        mapContainer.addEventListener('mousedown', (e) => {
-            if (e.button !== 2) return;
-            const markerEl = e.target.closest('.map-marker');
-            if (!markerEl) return;
-            const agentId = markerEl.dataset.agent;
-            if (!agentId || !agentMarkers[agentId]) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-            rotatingAgentId = agentId;
-            rotatingPendingHeading = null;
-
-            // Disable map and marker dragging during rotation
-            map.dragging.disable();
-            agentMarkers[agentId].dragging.disable();
-            mapContainer.classList.add('rotate-mode');
-        });
-
-        // Mousemove computes heading angle from marker center to cursor
+        // Mousemove for live adjustment feedback
         document.addEventListener('mousemove', (e) => {
-            if (!rotatingAgentId) return;
-            const marker = agentMarkers[rotatingAgentId];
+            if (!adjustMode || !adjustAgentId) return;
+            const marker = agentMarkers[adjustAgentId];
             if (!marker) return;
 
-            const mapEl = document.getElementById('map');
-            const mapRect = mapEl.getBoundingClientRect();
-            const markerPt = map.latLngToContainerPoint(marker.getLatLng());
-            const dx = e.clientX - (mapRect.left + markerPt.x);
-            const dy = e.clientY - (mapRect.top + markerPt.y);
+            if (adjustMode === 'heading') {
+                const mapEl = document.getElementById('map');
+                const mapRect = mapEl.getBoundingClientRect();
+                const markerPt = map.latLngToContainerPoint(marker.getLatLng());
+                const dx = e.clientX - (mapRect.left + markerPt.x);
+                const dy = e.clientY - (mapRect.top + markerPt.y);
 
-            // atan2(dx, -dy): 0 = north (screen up), CW positive
-            let angleDeg = Math.atan2(dx, -dy) * 180 / Math.PI;
-            if (angleDeg < 0) angleDeg += 360;
-            const angleRad = angleDeg * Math.PI / 180;
+                let angleDeg = Math.atan2(dx, -dy) * 180 / Math.PI;
+                if (angleDeg < 0) angleDeg += 360;
 
-            // Live visual feedback
-            const el = marker.getElement();
-            if (el) {
-                const shape = el.querySelector('.map-marker-shape');
-                if (shape) shape.style.transform = `rotate(${angleDeg}deg)`;
+                // Live rotation
+                const el = marker.getElement();
+                if (el) {
+                    const shape = el.querySelector('.map-marker-shape');
+                    if (shape) shape.style.transform = `rotate(${angleDeg}deg)`;
+                }
+
+                adjustPendingValue = angleDeg * Math.PI / 180;
+                banner.textContent = `Heading: ${angleDeg.toFixed(1)}° — click to set, ESC to cancel`;
+            } else if (adjustMode === 'altitude') {
+                const deltaY = adjustStartY - e.clientY; // up = positive
+                const newAlt = adjustStartAlt + deltaY * 0.5; // 0.5m per pixel
+                adjustPendingValue = newAlt;
+                banner.textContent = `Altitude: ${newAlt.toFixed(1)}m — click to set, ESC to cancel`;
             }
-
-            rotatingPendingHeading = angleRad;
         });
+    }
 
-        // Right-mouseup commits the heading
-        document.addEventListener('mouseup', (e) => {
-            if (!rotatingAgentId || e.button !== 2) return;
+    function _enterAdjustMode(mode, agentId) {
+        // Cancel any existing adjustment
+        if (adjustMode) _cancelAdjustment();
 
-            const marker = agentMarkers[rotatingAgentId];
-            const agentData = Agents.getAll()[rotatingAgentId] || {};
-            const heading = rotatingPendingHeading != null
-                ? rotatingPendingHeading
-                : (agentData.heading || 0);
-            const pos = marker.getLatLng();
+        adjustMode = mode;
+        adjustAgentId = agentId;
+        adjustPendingValue = null;
 
+        const mapContainer = document.getElementById('map-container');
+        const banner = document.getElementById('adjust-banner');
+        const marker = agentMarkers[agentId];
+
+        // Disable map panning and marker dragging
+        map.dragging.disable();
+        if (marker) marker.dragging.disable();
+        mapContainer.classList.add('adjust-mode');
+
+        if (mode === 'heading') {
+            banner.textContent = `Move mouse around ${agentId} to set heading — click to set, ESC to cancel`;
+        } else if (mode === 'altitude') {
+            const agentData = Agents.getAll()[agentId] || {};
+            adjustStartAlt = agentData.alt || 0;
+            // Capture current mouse Y on next move
+            adjustStartY = null;
+            const captureStart = (e) => {
+                if (adjustStartY === null) adjustStartY = e.clientY;
+            };
+            document.addEventListener('mousemove', captureStart, { once: true });
+            banner.textContent = `Move mouse up/down to adjust ${agentId} altitude (${adjustStartAlt.toFixed(1)}m) — click to set, ESC to cancel`;
+        }
+
+        banner.classList.add('visible');
+    }
+
+    function _commitAdjustment() {
+        if (!adjustMode || !adjustAgentId) return;
+
+        const marker = agentMarkers[adjustAgentId];
+        const agentData = Agents.getAll()[adjustAgentId] || {};
+        const pos = marker.getLatLng();
+
+        if (adjustMode === 'heading' && adjustPendingValue != null) {
             WS.sendBridge({
                 cmd: 'set_pose',
-                agent_id: rotatingAgentId,
+                agent_id: adjustAgentId,
                 lat: pos.lat,
                 lon: pos.lng,
                 alt: agentData.alt || 0,
-                heading: heading,
+                heading: adjustPendingValue,
             });
+        } else if (adjustMode === 'altitude' && adjustPendingValue != null) {
+            WS.sendBridge({
+                cmd: 'set_pose',
+                agent_id: adjustAgentId,
+                lat: pos.lat,
+                lon: pos.lng,
+                alt: adjustPendingValue,
+                heading: agentData.heading || 0,
+            });
+        }
 
-            // Re-enable dragging
-            map.dragging.enable();
-            if (marker.dragging) marker.dragging.enable();
-            mapContainer.classList.remove('rotate-mode');
+        _exitAdjustMode();
+    }
 
-            rotatingAgentId = null;
-            rotatingPendingHeading = null;
-        });
+    function _cancelAdjustment() {
+        // Revert visual heading to actual value
+        if (adjustMode === 'heading' && adjustAgentId) {
+            const marker = agentMarkers[adjustAgentId];
+            const agentData = Agents.getAll()[adjustAgentId] || {};
+            if (marker) {
+                const el = marker.getElement();
+                if (el) {
+                    const shape = el.querySelector('.map-marker-shape');
+                    if (shape) shape.style.transform = `rotate(${_headingToDeg(agentData.heading || 0)}deg)`;
+                }
+            }
+        }
+        _exitAdjustMode();
+    }
+
+    function _exitAdjustMode() {
+        if (adjustAgentId) {
+            const marker = agentMarkers[adjustAgentId];
+            if (marker && marker.dragging) marker.dragging.enable();
+        }
+        map.dragging.enable();
+        document.getElementById('map-container').classList.remove('adjust-mode');
+        document.getElementById('adjust-banner').classList.remove('visible');
+        adjustMode = null;
+        adjustAgentId = null;
+        adjustPendingValue = null;
     }
 
     // Marker shape SVGs per vehicle type (outline shapes, 40x40 viewBox)

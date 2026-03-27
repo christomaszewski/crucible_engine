@@ -1111,9 +1111,31 @@ select.form-input {
     cursor: crosshair;
 }
 
-#map-container.rotate-mode,
-#map-container.rotate-mode * {
+#map-container.adjust-mode,
+#map-container.adjust-mode * {
     cursor: crosshair !important;
+}
+
+.adjust-mode-banner {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--accent);
+    white-space: nowrap;
+    pointer-events: none;
+    display: none;
+}
+
+.adjust-mode-banner.visible {
+    display: block;
 }
 
 .place-mode-banner {
