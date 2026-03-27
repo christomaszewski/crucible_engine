@@ -4,8 +4,8 @@
 
 const MapView = (() => {
     let map = null;
-    const agentMarkers = {};      // agent_id -> L.marker
-    const estimateMarkers = {};   // agent_id -> L.marker
+    const agentMarkers = {};      // agent_name -> L.marker
+    const estimateMarkers = {};   // agent_name -> L.marker
     let placeMode = false;
     let placeModeCallback = null;
 
@@ -176,7 +176,7 @@ const MapView = (() => {
             agentData.heading = adjustPendingValue;
             WS.sendBridge({
                 cmd: 'set_pose',
-                agent_id: adjustAgentId,
+                agent_name: adjustAgentId,
                 lat: pos.lat,
                 lon: pos.lng,
                 alt: agentData.alt || 0,
@@ -186,7 +186,7 @@ const MapView = (() => {
             agentData.alt = adjustPendingValue;
             WS.sendBridge({
                 cmd: 'set_pose',
-                agent_id: adjustAgentId,
+                agent_name: adjustAgentId,
                 lat: pos.lat,
                 lon: pos.lng,
                 alt: adjustPendingValue,
@@ -306,7 +306,7 @@ const MapView = (() => {
             const agentData = Agents.getAll()[agentId] || {};
             WS.sendBridge({
                 cmd: 'set_pose',
-                agent_id: agentId,
+                agent_name: agentId,
                 lat: pos.lat,
                 lon: pos.lng,
                 alt: agentData.alt || 0,

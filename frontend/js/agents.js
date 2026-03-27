@@ -3,7 +3,7 @@
  */
 
 const Agents = (() => {
-    const agents = {};  // agent_id -> { lat, lon, alt, heading, sensors, domain_id, vehicle_type, vehicle_class, stack_status }
+    const agents = {};  // agent_name -> { lat, lon, alt, heading, sensors, domain_id, vehicle_type, vehicle_class, stack_status }
     let selectedId = null;
     let lastKnownVersion = 0;  // last state_version received from backend
     let sortMode = 'id';  // 'id', 'type', 'altitude'
@@ -13,7 +13,7 @@ const Agents = (() => {
     function getSelected() { return selectedId; }
 
     function addAgent(data) {
-        const id = data.agent_id;
+        const id = data.agent_name;
         agents[id] = {
             lat: data.lat || 0,
             lon: data.lon || 0,
@@ -43,7 +43,7 @@ const Agents = (() => {
     }
 
     function removeAgent(agentId) {
-        WS.sendBridge({ cmd: 'remove_agent', agent_id: agentId });
+        WS.sendBridge({ cmd: 'remove_agent', agent_name: agentId });
         Accuracy.removeAgent(agentId);
         delete agents[agentId];
         MapView.removeAgent(agentId);
@@ -57,11 +57,11 @@ const Agents = (() => {
     }
 
     function updateGroundTruth(data) {
-        let agent = agents[data.agent_id];
+        let agent = agents[data.agent_name];
         if (!agent) {
             // Auto-create agent from ground truth (e.g. loaded from scenario)
             addAgent({
-                agent_id: data.agent_id,
+                agent_name: data.agent_name,
                 lat: data.lat,
                 lon: data.lon,
                 alt: data.alt,
@@ -75,9 +75,9 @@ const Agents = (() => {
         agent.lon = data.lon;
         agent.alt = data.alt;
         agent.heading = data.heading;
-        MapView.updateAgent(data.agent_id, data.lat, data.lon, data.heading);
+        MapView.updateAgent(data.agent_name, data.lat, data.lon, data.heading);
         // Live-update detail panel if this agent is selected
-        if (selectedId === data.agent_id) _updateDetailValues(data.agent_id);
+        if (selectedId === data.agent_name) _updateDetailValues(data.agent_name);
     }
 
     function selectAgent(agentId) {
@@ -517,7 +517,7 @@ const Agents = (() => {
 
             WS.sendBridge({
                 cmd: 'set_pose',
-                agent_id: agentId,
+                agent_name: agentId,
                 lat: agent.lat,
                 lon: agent.lon,
                 alt: agent.alt,

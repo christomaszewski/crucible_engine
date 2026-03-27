@@ -5,13 +5,13 @@
 const Orchestrator = (() => {
     function init() {
         WS.on('orch:stack_update', (data) => {
-            Agents.updateStackStatus(data.agent_id, data.status);
+            Agents.updateStackStatus(data.agent_name, data.status);
             if (data.status === 'RUNNING') {
-                App.toast(`Stack for ${data.agent_id} is running`, 'success');
+                App.toast(`Stack for ${data.agent_name} is running`, 'success');
             } else if (data.status === 'ERROR') {
-                App.toast(`Stack error for ${data.agent_id}: ${data.error || 'unknown'}`, 'error');
+                App.toast(`Stack error for ${data.agent_name}: ${data.error || 'unknown'}`, 'error');
             } else if (data.status === 'STOPPED') {
-                App.toast(`Stack for ${data.agent_id} stopped`);
+                App.toast(`Stack for ${data.agent_name} stopped`);
             }
         });
 
@@ -43,7 +43,7 @@ const Orchestrator = (() => {
 
         WS.sendOrch({
             cmd: 'launch_stack',
-            agent_id: agentId,
+            agent_name: agentId,
             compose_file: composeFile,
             env,
         });
@@ -55,7 +55,7 @@ const Orchestrator = (() => {
     function stopStack(agentId) {
         WS.sendOrch({
             cmd: 'stop_stack',
-            agent_id: agentId,
+            agent_name: agentId,
         });
 
         Agents.updateStackStatus(agentId, 'STOPPING');

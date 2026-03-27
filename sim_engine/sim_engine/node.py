@@ -122,7 +122,7 @@ class SimEngineNode(Node):
         self._agent_pubs: dict[str, _AgentPublishers] = {}
         self._gt_accumulator: float = 0.0
 
-        # Initial poses for reset (agent_id -> Pose copy)
+        # Initial poses for reset (agent_name -> Pose copy)
         self._initial_poses: dict[str, Pose] = {}
 
         # Sim config dict (for save/load)
@@ -216,7 +216,7 @@ class SimEngineNode(Node):
 
         # Update sensors and publish
         for agent in self._world.get_all_agents():
-            pubs = self._agent_pubs.get(agent.agent_id)
+            pubs = self._agent_pubs.get(agent.agent_name)
             if pubs is None:
                 continue
 
@@ -247,7 +247,7 @@ class SimEngineNode(Node):
         stamp_nsec = int(self._world.sim_time_ns % 1_000_000_000)
 
         for agent in self._world.get_all_agents():
-            pubs = self._agent_pubs.get(agent.agent_id)
+            pubs = self._agent_pubs.get(agent.agent_name)
             if pubs is None or pubs.ground_truth_pub is None:
                 continue
 
@@ -257,7 +257,7 @@ class SimEngineNode(Node):
             msg.header = Header()
             msg.header.stamp.sec = stamp_sec
             msg.header.stamp.nanosec = stamp_nsec
-            msg.header.frame_id = f"{agent.agent_id}/base_link"
+            msg.header.frame_id = f"{agent.agent_name}/base_link"
             msg.latitude = agent.pose.latitude
             msg.longitude = agent.pose.longitude
             msg.altitude = agent.pose.altitude
@@ -285,19 +285,19 @@ class SimEngineNode(Node):
         # Sensor publishers
         for sensor_name, sensor in agent.sensors.items():
             tc = sensor.get_topic_config()
-            topic = f"/{agent.agent_id}/{tc.suffix}"
+            topic = f"/{agent.agent_name}/{tc.suffix}"
             pub = self.create_publisher(tc.msg_type, topic, _make_qos(tc.qos))
             pubs.sensor_pubs[sensor_name] = pub
             self.get_logger().info(f"Publishing: {topic} [{tc.msg_type.__name__}]")
 
         # Ground truth publisher
-        gt_topic = f"/{agent.agent_id}/sim/ground_truth"
+        gt_topic = f"/{agent.agent_name}/sim/ground_truth"
         pubs.ground_truth_pub = self.create_publisher(GroundTruth, gt_topic, 10)
         self.get_logger().info(f"Publishing ground truth: {gt_topic}")
 
         # Command velocity subscriber (if commanded motion)
         if isinstance(agent.motion_model, CommandedVelocityModel):
-            cmd_topic = f"/{agent.agent_id}/{agent.motion_model.topic_suffix}"
+            cmd_topic = f"/{agent.agent_name}/{agent.motion_model.topic_suffix}"
             pubs.cmd_vel_sub = self.create_subscription(
                 Twist,
                 cmd_topic,
@@ -306,11 +306,11 @@ class SimEngineNode(Node):
             )
             self.get_logger().info(f"Subscribing cmd_vel: {cmd_topic}")
 
-        self._agent_pubs[agent.agent_id] = pubs
+        self._agent_pubs[agent.agent_name] = pubs
 
-    def _unregister_agent(self, agent_id: str) -> None:
+    def _unregister_agent(self, agent_name: str) -> None:
         """Destroy publishers and subscribers for an agent."""
-        pubs = self._agent_pubs.pop(agent_id, None)
+        pubs = self._agent_pubs.pop(agent_name, None)
         if pubs is None:
             return
 
@@ -327,13 +327,13 @@ class SimEngineNode(Node):
         self, request: AddAgent.Request, response: AddAgent.Response
     ) -> AddAgent.Response:
         try:
-            if self._world.agent_exists(request.agent_id):
+            if self._world.agent_exists(request.agent_name):
                 response.success = False
-                response.message = f"Agent '{request.agent_id}' already exists"
+                response.message = f"Agent '{request.agent_name}' already exists"
                 return response
 
             agent = Agent(
-                agent_id=request.agent_id,
+                agent_name=request.agent_name,
                 pose=Pose(
                     latitude=request.latitude,
                     longitude=request.longitude,
@@ -354,10 +354,10 @@ class SimEngineNode(Node):
 
             self._world.add_agent(agent)
             self._register_agent(agent)
-            self._initial_poses[request.agent_id] = replace(agent.pose)
+            self._initial_poses[request.agent_name] = replace(agent.pose)
 
             response.success = True
-            response.message = f"Agent '{request.agent_id}' added"
+            response.message = f"Agent '{request.agent_name}' added"
         except Exception as e:
             response.success = False
             response.message = str(e)
@@ -367,11 +367,11 @@ class SimEngineNode(Node):
         self, request: RemoveAgent.Request, response: RemoveAgent.Response
     ) -> RemoveAgent.Response:
         try:
-            self._unregister_agent(request.agent_id)
-            self._world.remove_agent(request.agent_id)
-            self._initial_poses.pop(request.agent_id, None)
+            self._unregister_agent(request.agent_name)
+            self._world.remove_agent(request.agent_name)
+            self._initial_poses.pop(request.agent_name, None)
             response.success = True
-            response.message = f"Agent '{request.agent_id}' removed"
+            response.message = f"Agent '{request.agent_name}' removed"
         except Exception as e:
             response.success = False
             response.message = str(e)
@@ -383,12 +383,12 @@ class SimEngineNode(Node):
         response: ConfigureSensor.Response,
     ) -> ConfigureSensor.Response:
         try:
-            agent = self._world.get_agent(request.agent_id)
+            agent = self._world.get_agent(request.agent_name)
             sensor_cfg = json.loads(request.config_json)
             sensor_name = request.sensor_name
 
             # If sensor exists, destroy its publisher first
-            pubs = self._agent_pubs.get(request.agent_id)
+            pubs = self._agent_pubs.get(request.agent_name)
             if pubs and sensor_name in pubs.sensor_pubs:
                 self.destroy_publisher(pubs.sensor_pubs.pop(sensor_name))
 
@@ -399,12 +399,12 @@ class SimEngineNode(Node):
             # Create new publisher
             if pubs:
                 tc = sensor.get_topic_config()
-                topic = f"/{agent.agent_id}/{tc.suffix}"
+                topic = f"/{agent.agent_name}/{tc.suffix}"
                 pub = self.create_publisher(tc.msg_type, topic, _make_qos(tc.qos))
                 pubs.sensor_pubs[sensor_name] = pub
 
             response.success = True
-            response.message = f"Sensor '{sensor_name}' configured on '{request.agent_id}'"
+            response.message = f"Sensor '{sensor_name}' configured on '{request.agent_name}'"
         except Exception as e:
             response.success = False
             response.message = str(e)
@@ -416,23 +416,23 @@ class SimEngineNode(Node):
         response: RemoveSensor.Response,
     ) -> RemoveSensor.Response:
         try:
-            agent = self._world.get_agent(request.agent_id)
+            agent = self._world.get_agent(request.agent_name)
             sensor_name = request.sensor_name
 
             if sensor_name not in agent.sensors:
                 response.success = False
-                response.message = f"Sensor '{sensor_name}' not found on '{request.agent_id}'"
+                response.message = f"Sensor '{sensor_name}' not found on '{request.agent_name}'"
                 return response
 
             # Destroy publisher
-            pubs = self._agent_pubs.get(request.agent_id)
+            pubs = self._agent_pubs.get(request.agent_name)
             if pubs and sensor_name in pubs.sensor_pubs:
                 self.destroy_publisher(pubs.sensor_pubs.pop(sensor_name))
 
             del agent.sensors[sensor_name]
 
             response.success = True
-            response.message = f"Sensor '{sensor_name}' removed from '{request.agent_id}'"
+            response.message = f"Sensor '{sensor_name}' removed from '{request.agent_name}'"
         except Exception as e:
             response.success = False
             response.message = str(e)
@@ -444,7 +444,7 @@ class SimEngineNode(Node):
         response: SetPose.Response,
     ) -> SetPose.Response:
         try:
-            agent = self._world.get_agent(request.agent_id)
+            agent = self._world.get_agent(request.agent_name)
             agent.pose.latitude = request.latitude
             agent.pose.longitude = request.longitude
             agent.pose.altitude = request.altitude
@@ -452,10 +452,10 @@ class SimEngineNode(Node):
 
             # If sim hasn't started yet, this is an initial condition change
             if self._world.sim_time_ns == 0:
-                self._initial_poses[request.agent_id] = replace(agent.pose)
+                self._initial_poses[request.agent_name] = replace(agent.pose)
 
             response.success = True
-            response.message = f"Pose updated for '{request.agent_id}'"
+            response.message = f"Pose updated for '{request.agent_name}'"
         except Exception as e:
             response.success = False
             response.message = str(e)
@@ -470,8 +470,8 @@ class SimEngineNode(Node):
             config = load_scenario(request.config_yaml)
 
             # Clear existing agents
-            for agent_id in list(self._agent_pubs.keys()):
-                self._unregister_agent(agent_id)
+            for agent_name in list(self._agent_pubs.keys()):
+                self._unregister_agent(agent_name)
             # Rebuild world
             self._world = WorldState()
             world, sim_cfg = build_world_from_config(config)
@@ -491,7 +491,7 @@ class SimEngineNode(Node):
             self._initial_poses.clear()
             for agent in self._world.get_all_agents():
                 self._register_agent(agent)
-                self._initial_poses[agent.agent_id] = replace(agent.pose)
+                self._initial_poses[agent.agent_name] = replace(agent.pose)
 
             # Load scenario events
             events = config.get("scenario", {}).get("events", [])
@@ -560,7 +560,7 @@ class SimEngineNode(Node):
                 self._gt_accumulator = 0.0
                 # Restore initial poses and zero velocities
                 for agent in self._world.get_all_agents():
-                    initial = self._initial_poses.get(agent.agent_id)
+                    initial = self._initial_poses.get(agent.agent_name)
                     if initial:
                         agent.pose = replace(initial)
                     agent.velocity = Velocity()
@@ -640,7 +640,7 @@ class SimEngineNode(Node):
             self._initial_poses.clear()
             for agent in self._world.get_all_agents():
                 self._register_agent(agent)
-                self._initial_poses[agent.agent_id] = replace(agent.pose)
+                self._initial_poses[agent.agent_name] = replace(agent.pose)
 
             events = config.get("scenario", {}).get("events", [])
             self._scenario = ScenarioRunner(self._world)

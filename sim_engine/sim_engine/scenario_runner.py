@@ -81,12 +81,12 @@ class ScenarioRunner:
             logger.exception("Failed to execute scenario event: %s", event)
 
     def _handle_disable_sensor(self, params: dict[str, Any]) -> None:
-        agent_id = params["agent"]
+        agent_name = params["agent"]
         sensor_name = params["sensor"]
-        agent = self._world.get_agent(agent_id)
+        agent = self._world.get_agent(agent_name)
         if sensor_name in agent.sensors:
             del agent.sensors[sensor_name]
-            logger.info("Disabled sensor %s on %s", sensor_name, agent_id)
+            logger.info("Disabled sensor %s on %s", sensor_name, agent_name)
 
     def _handle_enable_sensor(self, params: dict[str, Any]) -> None:
         # Re-enabling requires reconstructing the sensor from stored config.
@@ -94,15 +94,15 @@ class ScenarioRunner:
         logger.warning("enable_sensor not yet fully implemented: %s", params)
 
     def _handle_update_param(self, params: dict[str, Any]) -> None:
-        agent_id = params["agent"]
+        agent_name = params["agent"]
         sensor_name = params["sensor"]
         param_name = params["param"]
         value = params["value"]
 
-        agent = self._world.get_agent(agent_id)
+        agent = self._world.get_agent(agent_name)
         sensor = agent.sensors.get(sensor_name)
         if sensor is None:
-            logger.warning("Sensor %s not found on %s", sensor_name, agent_id)
+            logger.warning("Sensor %s not found on %s", sensor_name, agent_name)
             return
 
         # Update the sensor's internal attribute directly
@@ -114,7 +114,7 @@ class ScenarioRunner:
                 sensor_name,
                 param_name,
                 value,
-                agent_id,
+                agent_name,
             )
         else:
             logger.warning(
@@ -122,8 +122,8 @@ class ScenarioRunner:
             )
 
     def _handle_set_pose(self, params: dict[str, Any]) -> None:
-        agent_id = params["agent"]
-        agent = self._world.get_agent(agent_id)
+        agent_name = params["agent"]
+        agent = self._world.get_agent(agent_name)
         if "lat" in params:
             agent.pose.latitude = params["lat"]
         if "lon" in params:
@@ -132,7 +132,7 @@ class ScenarioRunner:
             agent.pose.altitude = params["alt"]
         if "heading" in params:
             agent.pose.heading = params["heading"]
-        logger.info("Set pose for %s", agent_id)
+        logger.info("Set pose for %s", agent_name)
 
     def get_events_config(self) -> list[dict[str, Any]]:
         """Serialize events back to config format."""

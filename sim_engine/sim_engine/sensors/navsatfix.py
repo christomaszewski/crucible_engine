@@ -69,7 +69,7 @@ class NavSatFixModel(SensorModel):
         msg.header = Header()
         msg.header.stamp.sec = int(world.sim_time_ns // 1_000_000_000)
         msg.header.stamp.nanosec = int(world.sim_time_ns % 1_000_000_000)
-        msg.header.frame_id = f"{agent.agent_id}/gps"
+        msg.header.frame_id = f"{agent.agent_name}/gps"
 
         msg.status.status = NavSatStatus.STATUS_FIX
         msg.status.service = NavSatStatus.SERVICE_GPS

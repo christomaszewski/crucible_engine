@@ -198,7 +198,7 @@ const Sensors = (() => {
         // Send to backend
         WS.sendBridge({
             cmd: 'configure_sensor',
-            agent_id: agentId,
+            agent_name: agentId,
             sensor_name: sensorName,
             config: cfg,
         });
@@ -239,7 +239,7 @@ const Sensors = (() => {
 
         WS.sendBridge({
             cmd: 'configure_sensor',
-            agent_id: agentId,
+            agent_name: agentId,
             sensor_name: sensorType,
             config: config,
         });
@@ -262,7 +262,7 @@ const Sensors = (() => {
     function removeSensor(agentId, sensorName) {
         WS.sendBridge({
             cmd: 'remove_sensor',
-            agent_id: agentId,
+            agent_name: agentId,
             sensor_name: sensorName,
         });
 

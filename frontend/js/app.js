@@ -66,7 +66,7 @@ const App = (() => {
                         const existing = Agents.getAll()[id];
                         if (!existing) {
                             Agents.addAgent({
-                                agent_id: id,
+                                agent_name: id,
                                 ...agentData,
                             });
                         } else {
@@ -188,7 +188,7 @@ const App = (() => {
 
         WS.sendBridge({
             cmd: 'add_agent',
-            agent_id: agentId,
+            agent_name: agentId,
             lat, lon, alt, heading,
             domain_id: domainId,
             vehicle_type: vehicleType,
@@ -197,7 +197,7 @@ const App = (() => {
 
         // Optimistically add to UI so marker appears immediately
         Agents.addAgent({
-            agent_id: agentId,
+            agent_name: agentId,
             lat, lon, alt, heading,
             sensors: [],
             domain_id: domainId,
@@ -261,7 +261,7 @@ const App = (() => {
             const domainId = match ? parseInt(match[1], 10) : 0;
             WS.sendBridge({
                 cmd: 'add_agent',
-                agent_id: agentId,
+                agent_name: agentId,
                 lat, lon,
                 alt: 100.0,
                 heading: 0,
@@ -272,7 +272,7 @@ const App = (() => {
 
             // Optimistically add to UI so marker appears immediately
             Agents.addAgent({
-                agent_id: agentId,
+                agent_name: agentId,
                 lat, lon,
                 alt: 100.0,
                 heading: 0,

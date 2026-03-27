@@ -3,28 +3,28 @@
  */
 
 const Accuracy = (() => {
-    const estimates = {};    // agent_id -> { lat, lon, alt }
-    const groundTruth = {};  // agent_id -> { lat, lon, alt }
-    const errors = {};       // agent_id -> { horiz_m, vert_m }
+    const estimates = {};    // agent_name -> { lat, lon, alt }
+    const groundTruth = {};  // agent_name -> { lat, lon, alt }
+    const errors = {};       // agent_name -> { horiz_m, vert_m }
 
     function updateEstimate(data) {
-        estimates[data.agent_id] = {
+        estimates[data.agent_name] = {
             lat: data.lat,
             lon: data.lon,
             alt: data.alt || 0,
         };
-        MapView.updateEstimate(data.agent_id, data.lat, data.lon);
-        computeError(data.agent_id);
+        MapView.updateEstimate(data.agent_name, data.lat, data.lon);
+        computeError(data.agent_name);
         renderPanel();
     }
 
     function updateGroundTruth(data) {
-        groundTruth[data.agent_id] = {
+        groundTruth[data.agent_name] = {
             lat: data.lat,
             lon: data.lon,
             alt: data.alt || 0,
         };
-        computeError(data.agent_id);
+        computeError(data.agent_name);
         renderPanel();
     }
 

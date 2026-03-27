@@ -80,7 +80,7 @@ class ImuModel(SensorModel):
         msg.header = Header()
         msg.header.stamp.sec = int(world.sim_time_ns // 1_000_000_000)
         msg.header.stamp.nanosec = int(world.sim_time_ns % 1_000_000_000)
-        msg.header.frame_id = f"{agent.agent_id}/imu_link"
+        msg.header.frame_id = f"{agent.agent_name}/imu_link"
 
         # Orientation from agent pose with noise
         noisy_roll = agent.pose.roll + self.gauss(0.0, self._orientation_std)

@@ -133,7 +133,7 @@ class WsBridgeNode(Node):
 
     async def _cmd_add_agent(self, ws, data: dict) -> None:
         req = AddAgent.Request()
-        req.agent_id = data["agent_id"]
+        req.agent_name = data["agent_name"]
         req.latitude = float(data.get("lat", 0.0))
         req.longitude = float(data.get("lon", 0.0))
         req.altitude = float(data.get("alt", 0.0))
@@ -146,7 +146,7 @@ class WsBridgeNode(Node):
         result = await self._await_future(future)
 
         # Subscribe to ground truth for this agent
-        self._subscribe_ground_truth(data["agent_id"])
+        self._subscribe_ground_truth(data["agent_name"])
 
         self._state_version += 1
         await self.broadcast({
@@ -158,13 +158,13 @@ class WsBridgeNode(Node):
 
     async def _cmd_remove_agent(self, ws, data: dict) -> None:
         req = RemoveAgent.Request()
-        req.agent_id = data["agent_id"]
+        req.agent_name = data["agent_name"]
 
         future = self._cli_remove.call_async(req)
         result = await self._await_future(future)
 
-        self._unsubscribe_ground_truth(data["agent_id"])
-        self._unsubscribe_pose_estimate(data["agent_id"])
+        self._unsubscribe_ground_truth(data["agent_name"])
+        self._unsubscribe_pose_estimate(data["agent_name"])
 
         self._state_version += 1
         await self.broadcast({
@@ -176,7 +176,7 @@ class WsBridgeNode(Node):
 
     async def _cmd_configure_sensor(self, ws, data: dict) -> None:
         req = ConfigureSensor.Request()
-        req.agent_id = data["agent_id"]
+        req.agent_name = data["agent_name"]
         req.sensor_name = data["sensor_name"]
         req.config_json = json.dumps(data["config"])
 
@@ -193,7 +193,7 @@ class WsBridgeNode(Node):
 
     async def _cmd_remove_sensor(self, ws, data: dict) -> None:
         req = RemoveSensor.Request()
-        req.agent_id = data["agent_id"]
+        req.agent_name = data["agent_name"]
         req.sensor_name = data["sensor_name"]
 
         future = self._cli_remove_sensor.call_async(req)
@@ -222,7 +222,7 @@ class WsBridgeNode(Node):
 
     async def _cmd_set_pose(self, ws, data: dict) -> None:
         req = SetPose.Request()
-        req.agent_id = data["agent_id"]
+        req.agent_name = data["agent_name"]
         req.latitude = float(data.get("lat", 0.0))
         req.longitude = float(data.get("lon", 0.0))
         req.altitude = float(data.get("alt", 0.0))
@@ -298,9 +298,9 @@ class WsBridgeNode(Node):
             )
 
     async def _cmd_subscribe_pose_estimate(self, ws, data: dict) -> None:
-        agent_id = data["agent_id"]
+        agent_name = data["agent_name"]
         topic = data["topic"]
-        self._subscribe_pose_estimate(agent_id, topic)
+        self._subscribe_pose_estimate(agent_name, topic)
         await ws.send(
             json.dumps({
                 "type": "info",
@@ -310,12 +310,12 @@ class WsBridgeNode(Node):
         )
 
     async def _cmd_unsubscribe_pose_estimate(self, ws, data: dict) -> None:
-        agent_id = data["agent_id"]
-        self._unsubscribe_pose_estimate(agent_id)
+        agent_name = data["agent_name"]
+        self._unsubscribe_pose_estimate(agent_name)
         await ws.send(
             json.dumps({
                 "type": "info",
-                "message": f"Unsubscribed pose estimate for {agent_id}",
+                "message": f"Unsubscribed pose estimate for {agent_name}",
                 "success": True,
             })
         )
@@ -363,11 +363,11 @@ class WsBridgeNode(Node):
                 sim_status = sim_cfg.get("status", "READY")
                 sim_dt = sim_cfg.get("sim_dt", 0.01)
 
-                for agent_id, agent_cfg in config.get("agents", {}).items():
+                for agent_name, agent_cfg in config.get("agents", {}).items():
                     pose = agent_cfg.get("initial_pose", {})
                     sensors_cfg = agent_cfg.get("sensors", {})
                     stack_cfg = agent_cfg.get("stack", {})
-                    agents[agent_id] = {
+                    agents[agent_name] = {
                         "lat": pose.get("lat", 0.0),
                         "lon": pose.get("lon", 0.0),
                         "alt": pose.get("alt", 0.0),
@@ -383,8 +383,8 @@ class WsBridgeNode(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to get state via SaveScenario: {e}")
             # Fall back to ground truth cache
-            for agent_id, gt in self._gt_cache.items():
-                agents[agent_id] = {
+            for agent_name, gt in self._gt_cache.items():
+                agents[agent_name] = {
                     "lat": gt.get("lat", 0.0),
                     "lon": gt.get("lon", 0.0),
                     "alt": gt.get("alt", 0.0),
@@ -416,23 +416,23 @@ class WsBridgeNode(Node):
         ui_ids = set(ui_agents.keys())
 
         # Remove backend agents not in UI
-        for agent_id in backend_ids - ui_ids:
+        for agent_name in backend_ids - ui_ids:
             try:
                 req = RemoveAgent.Request()
-                req.agent_id = agent_id
+                req.agent_name = agent_name
                 future = self._cli_remove.call_async(req)
                 await self._await_future(future)
-                self._unsubscribe_ground_truth(agent_id)
-                self._unsubscribe_pose_estimate(agent_id)
+                self._unsubscribe_ground_truth(agent_name)
+                self._unsubscribe_pose_estimate(agent_name)
             except Exception as e:
-                self.get_logger().error(f"push_state remove {agent_id}: {e}")
+                self.get_logger().error(f"push_state remove {agent_name}: {e}")
 
         # Add UI agents not in backend
-        for agent_id in ui_ids - backend_ids:
-            agent = ui_agents[agent_id]
+        for agent_name in ui_ids - backend_ids:
+            agent = ui_agents[agent_name]
             try:
                 req = AddAgent.Request()
-                req.agent_id = agent_id
+                req.agent_name = agent_name
                 req.latitude = float(agent.get("lat", 0.0))
                 req.longitude = float(agent.get("lon", 0.0))
                 req.altitude = float(agent.get("alt", 0.0))
@@ -442,9 +442,9 @@ class WsBridgeNode(Node):
                 req.vehicle_class = agent.get("vehicle_class", "")
                 future = self._cli_add.call_async(req)
                 await self._await_future(future)
-                self._subscribe_ground_truth(agent_id)
+                self._subscribe_ground_truth(agent_name)
             except Exception as e:
-                self.get_logger().error(f"push_state add {agent_id}: {e}")
+                self.get_logger().error(f"push_state add {agent_name}: {e}")
 
         self._state_version = ui_version
         await self.broadcast({
@@ -478,24 +478,24 @@ class WsBridgeNode(Node):
         topic_list = self.get_topic_names_and_types()
         for topic_name, _types in topic_list:
             if topic_name.endswith("/sim/ground_truth"):
-                # Extract agent_id from /<agent_id>/sim/ground_truth
+                # Extract agent_name from /<agent_name>/sim/ground_truth
                 parts = topic_name.strip("/").split("/")
                 if len(parts) >= 3:
-                    agent_id = parts[0]
-                    if agent_id not in self._gt_subs:
-                        self._subscribe_ground_truth(agent_id)
+                    agent_name = parts[0]
+                    if agent_name not in self._gt_subs:
+                        self._subscribe_ground_truth(agent_name)
                         self.get_logger().info(
-                            f"Auto-discovered agent: {agent_id}"
+                            f"Auto-discovered agent: {agent_name}"
                         )
 
     # -- Ground truth subscription -------------------------------------------
 
-    def _subscribe_ground_truth(self, agent_id: str) -> None:
-        if agent_id in self._gt_subs:
+    def _subscribe_ground_truth(self, agent_name: str) -> None:
+        if agent_name in self._gt_subs:
             return
-        topic = f"/{agent_id}/sim/ground_truth"
+        topic = f"/{agent_name}/sim/ground_truth"
 
-        def callback(msg: GroundTruth, aid=agent_id):
+        def callback(msg: GroundTruth, aid=agent_name):
             # Extract yaw (heading) from quaternion
             q = msg.orientation
             import math
@@ -504,7 +504,7 @@ class WsBridgeNode(Node):
             heading = math.atan2(siny_cosp, cosy_cosp)
             gt_data = {
                 "type": "ground_truth",
-                "agent_id": aid,
+                "agent_name": aid,
                 "lat": msg.latitude,
                 "lon": msg.longitude,
                 "alt": msg.altitude,
@@ -513,41 +513,41 @@ class WsBridgeNode(Node):
             self._gt_cache[aid] = gt_data
             self.broadcast_sync(gt_data)
 
-        self._gt_subs[agent_id] = self.create_subscription(
+        self._gt_subs[agent_name] = self.create_subscription(
             GroundTruth, topic, callback, 10
         )
 
-    def _unsubscribe_ground_truth(self, agent_id: str) -> None:
-        sub = self._gt_subs.pop(agent_id, None)
+    def _unsubscribe_ground_truth(self, agent_name: str) -> None:
+        sub = self._gt_subs.pop(agent_name, None)
         if sub:
             self.destroy_subscription(sub)
-        self._gt_cache.pop(agent_id, None)
+        self._gt_cache.pop(agent_name, None)
 
     # -- Pose estimate subscription ------------------------------------------
 
-    def _subscribe_pose_estimate(self, agent_id: str, topic: str) -> None:
-        self._unsubscribe_pose_estimate(agent_id)
+    def _subscribe_pose_estimate(self, agent_name: str, topic: str) -> None:
+        self._unsubscribe_pose_estimate(agent_name)
 
         # We subscribe to NavSatFix as a common pose estimate type.
         # This could be made more flexible with dynamic type detection.
         from sensor_msgs.msg import NavSatFix
 
-        def callback(msg: NavSatFix, aid=agent_id):
+        def callback(msg: NavSatFix, aid=agent_name):
             self.broadcast_sync({
                 "type": "pose_estimate",
-                "agent_id": aid,
+                "agent_name": aid,
                 "lat": msg.latitude,
                 "lon": msg.longitude,
                 "alt": msg.altitude,
             })
 
-        self._pose_est_subs[agent_id] = self.create_subscription(
+        self._pose_est_subs[agent_name] = self.create_subscription(
             NavSatFix, topic, callback, 10
         )
-        self.get_logger().info(f"Subscribed pose estimate: {agent_id} -> {topic}")
+        self.get_logger().info(f"Subscribed pose estimate: {agent_name} -> {topic}")
 
-    def _unsubscribe_pose_estimate(self, agent_id: str) -> None:
-        sub = self._pose_est_subs.pop(agent_id, None)
+    def _unsubscribe_pose_estimate(self, agent_name: str) -> None:
+        sub = self._pose_est_subs.pop(agent_name, None)
         if sub:
             self.destroy_subscription(sub)
 

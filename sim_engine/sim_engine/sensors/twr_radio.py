@@ -62,7 +62,7 @@ class TwrRadioModel(SensorModel):
             return None
 
         neighbors = world.agents_within_range(
-            agent.agent_id,
+            agent.agent_name,
             self._max_range_m,
             sensor_type="twr_radio",
         )
@@ -77,15 +77,15 @@ class TwrRadioModel(SensorModel):
         msg.header = Header()
         msg.header.stamp.sec = stamp_sec
         msg.header.stamp.nanosec = stamp_nsec
-        msg.header.frame_id = f"{agent.agent_id}/radio"
+        msg.header.frame_id = f"{agent.agent_name}/radio"
 
         for other, true_dist in neighbors:
             r = RangeStamped()
             r.header = Header()
             r.header.stamp.sec = stamp_sec
             r.header.stamp.nanosec = stamp_nsec
-            r.header.frame_id = f"{agent.agent_id}/radio"
-            r.remote_agent_id = other.agent_id
+            r.header.frame_id = f"{agent.agent_name}/radio"
+            r.remote_agent_name = other.agent_name
             r.range_m = true_dist + self.gauss(0.0, self._std_m)
             r.range_std_m = self._std_m
             msg.ranges.append(r)

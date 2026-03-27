@@ -59,7 +59,7 @@ class Velocity:
 class Agent:
     """A simulated agent with pose, velocity, sensors, and motion model."""
 
-    agent_id: str
+    agent_name: str
     pose: Pose = field(default_factory=Pose)
     velocity: Velocity = field(default_factory=Velocity)
     domain_id: int = 0

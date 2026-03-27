@@ -52,40 +52,40 @@ class WorldState:
 
     def add_agent(self, agent: Agent) -> None:
         with self._lock:
-            if agent.agent_id in self._agents:
-                raise ValueError(f"Agent '{agent.agent_id}' already exists")
-            self._agents[agent.agent_id] = agent
+            if agent.agent_name in self._agents:
+                raise ValueError(f"Agent '{agent.agent_name}' already exists")
+            self._agents[agent.agent_name] = agent
 
-    def remove_agent(self, agent_id: str) -> Agent:
+    def remove_agent(self, agent_name: str) -> Agent:
         with self._lock:
-            if agent_id not in self._agents:
-                raise KeyError(f"Agent '{agent_id}' not found")
-            return self._agents.pop(agent_id)
+            if agent_name not in self._agents:
+                raise KeyError(f"Agent '{agent_name}' not found")
+            return self._agents.pop(agent_name)
 
-    def get_agent(self, agent_id: str) -> Agent:
+    def get_agent(self, agent_name: str) -> Agent:
         with self._lock:
-            return self._agents[agent_id]
+            return self._agents[agent_name]
 
     def get_all_agents(self) -> list[Agent]:
         with self._lock:
             return list(self._agents.values())
 
-    def agent_exists(self, agent_id: str) -> bool:
+    def agent_exists(self, agent_name: str) -> bool:
         with self._lock:
-            return agent_id in self._agents
+            return agent_name in self._agents
 
     # -- Spatial queries -----------------------------------------------------
 
     def agents_within_range(
         self,
-        agent_id: str,
+        agent_name: str,
         max_range_m: float,
         sensor_type: str | None = None,
     ) -> list[tuple[Agent, float]]:
         """Return agents within range of the given agent.
 
         Args:
-            agent_id: The reference agent.
+            agent_name: The reference agent.
             max_range_m: Maximum distance in meters.
             sensor_type: If provided, only return agents that have this sensor
                          type attached.
@@ -94,11 +94,11 @@ class WorldState:
             List of (agent, distance_m) tuples, sorted by distance.
         """
         with self._lock:
-            origin = self._agents[agent_id]
+            origin = self._agents[agent_name]
             results: list[tuple[Agent, float]] = []
 
             for other in self._agents.values():
-                if other.agent_id == agent_id:
+                if other.agent_name == agent_name:
                     continue
                 dist = origin.pose.distance_3d_to(other.pose)
                 if dist > max_range_m:

@@ -65,7 +65,7 @@ class QoSPreset(Enum):
 class TopicConfig:
     """Describes the ROS2 topic a sensor publishes on."""
 
-    suffix: str  # e.g. "gps/fix" → /<agent_id>/gps/fix
+    suffix: str  # e.g. "gps/fix" → /<agent_name>/gps/fix
     msg_type: type  # the ROS2 message class
     qos: QoSPreset = QoSPreset.SENSOR_DATA
 

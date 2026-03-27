@@ -43,7 +43,7 @@ def build_motion(motion_cfg: dict[str, Any]) -> MotionModel:
     return model
 
 
-def load_agent_from_config(agent_id: str, agent_cfg: dict[str, Any]) -> Agent:
+def load_agent_from_config(agent_name: str, agent_cfg: dict[str, Any]) -> Agent:
     """Build an Agent instance from a config dict."""
     pose_cfg = agent_cfg.get("initial_pose", {})
     pose = Pose(
@@ -54,7 +54,7 @@ def load_agent_from_config(agent_id: str, agent_cfg: dict[str, Any]) -> Agent:
     )
 
     agent = Agent(
-        agent_id=agent_id,
+        agent_name=agent_name,
         pose=pose,
         velocity=Velocity(),
         domain_id=agent_cfg.get("domain_id", 0),
@@ -104,8 +104,8 @@ def build_world_from_config(config: dict[str, Any]) -> tuple[WorldState, dict]:
         world.terrain = TerrainModel(dem_path)
 
     # Agents
-    for agent_id, agent_cfg in config.get("agents", {}).items():
-        agent = load_agent_from_config(agent_id, agent_cfg)
+    for agent_name, agent_cfg in config.get("agents", {}).items():
+        agent = load_agent_from_config(agent_name, agent_cfg)
         world.add_agent(agent)
 
     return world, sim_cfg
@@ -164,6 +164,6 @@ def save_scenario(world: WorldState, sim_cfg: dict[str, Any]) -> str:
                 "env": agent.stack_env,
             }
 
-        config["agents"][agent.agent_id] = agent_cfg
+        config["agents"][agent.agent_name] = agent_cfg
 
     return yaml.dump(config, default_flow_style=False, sort_keys=False)
