@@ -38,15 +38,32 @@ const MapView = (() => {
         });
     }
 
+    // Marker shape SVGs per vehicle type (outline shapes, 40x40 viewBox)
+    const markerShapes = {
+        // Diamond — aerial
+        uav: '<polygon points="20,2 38,20 20,38 2,20" />',
+        // Circle — generic
+        uxv: '<circle cx="20" cy="20" r="17" />',
+        // Pentagon — surface vessel
+        usv: '<polygon points="20,2 37,14 31,36 9,36 3,14" />',
+        // Square — ground vehicle
+        ugv: '<rect x="4" y="4" width="32" height="32" rx="3" />',
+        // Inverted triangle — underwater
+        uuv: '<polygon points="4,6 36,6 20,38" />',
+    };
+
     function createAgentIcon(agentId, selected = false) {
         const vtype = Icons.getTypeFromId(agentId);
-        const svg = Icons.getSvg(vtype);
+        const shape = markerShapes[vtype] || markerShapes.uxv;
         const selClass = selected ? 'selected' : '';
         return L.divIcon({
             className: '',
-            html: `<div class="agent-marker type-${vtype} ${selClass}">${svg}</div>`,
-            iconSize: [28, 28],
-            iconAnchor: [14, 14],
+            html: `<div class="map-marker type-${vtype} ${selClass}">
+                <svg class="map-marker-shape" viewBox="0 0 40 40">${shape}</svg>
+                <span class="map-marker-label">${agentId}</span>
+            </div>`,
+            iconSize: [60, 46],
+            iconAnchor: [30, 23],
         });
     }
 

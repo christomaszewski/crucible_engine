@@ -72,7 +72,7 @@ html, body {
     padding: 0 16px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
-    z-index: 100;
+    z-index: 1100;
 }
 
 #sidebar {
@@ -254,7 +254,7 @@ html, body {
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
-    z-index: 200;
+    z-index: 1200;
     min-width: 120px;
     overflow: hidden;
 }
@@ -543,45 +543,60 @@ select.form-input {
     background: var(--bg-elevated) !important;
 }
 
-/* Agent markers */
-.agent-marker {
+/* Map markers — shape per vehicle type with ID label */
+.map-marker {
+    position: relative;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--color-uxv);
-    border: 2px solid white;
-    box-shadow: var(--shadow);
-    transition: transform var(--transition);
     cursor: pointer;
+    transition: transform var(--transition);
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
 }
 
-.agent-marker svg {
-    width: 16px;
-    height: 16px;
+.map-marker:hover {
+    transform: scale(1.15);
+}
+
+.map-marker-shape {
+    width: 32px;
+    height: 32px;
+    fill: var(--color-uxv);
+    fill-opacity: 0.25;
+    stroke: var(--color-uxv);
+    stroke-width: 2.5;
+}
+
+.map-marker-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
     color: white;
+    white-space: nowrap;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.8);
+    margin-top: -2px;
+    letter-spacing: 0.3px;
 }
 
-.agent-marker:hover {
-    transform: scale(1.2);
+/* Type colors */
+.map-marker.type-uxv .map-marker-shape { fill: var(--color-uxv); fill-opacity: 0.25; stroke: var(--color-uxv); }
+.map-marker.type-uav .map-marker-shape { fill: var(--color-uav); fill-opacity: 0.25; stroke: var(--color-uav); }
+.map-marker.type-usv .map-marker-shape { fill: var(--color-usv); fill-opacity: 0.25; stroke: var(--color-usv); }
+.map-marker.type-ugv .map-marker-shape { fill: var(--color-ugv); fill-opacity: 0.25; stroke: var(--color-ugv); }
+.map-marker.type-uuv .map-marker-shape { fill: var(--color-uuv); fill-opacity: 0.25; stroke: var(--color-uuv); }
+
+/* Selected state */
+.map-marker.selected .map-marker-shape {
+    fill-opacity: 0.5;
+    stroke-width: 3.5;
+    filter: drop-shadow(0 0 6px currentColor);
 }
 
-.agent-marker.selected {
-    box-shadow: 0 0 0 3px var(--accent), var(--shadow);
-}
-
-.agent-marker.type-uxv { background: var(--color-uxv); }
-.agent-marker.type-uav { background: var(--color-uav); }
-.agent-marker.type-usv { background: var(--color-usv); }
-.agent-marker.type-ugv { background: var(--color-ugv); }
-.agent-marker.type-uuv { background: var(--color-uuv); }
-
-.agent-marker.selected.type-uav { box-shadow: 0 0 0 3px var(--color-uav), var(--shadow); }
-.agent-marker.selected.type-usv { box-shadow: 0 0 0 3px var(--color-usv), var(--shadow); }
-.agent-marker.selected.type-ugv { box-shadow: 0 0 0 3px var(--color-ugv), var(--shadow); }
-.agent-marker.selected.type-uuv { box-shadow: 0 0 0 3px var(--color-uuv), var(--shadow); }
+.map-marker.selected.type-uav .map-marker-shape { filter: drop-shadow(0 0 6px var(--color-uav)); }
+.map-marker.selected.type-usv .map-marker-shape { filter: drop-shadow(0 0 6px var(--color-usv)); }
+.map-marker.selected.type-ugv .map-marker-shape { filter: drop-shadow(0 0 6px var(--color-ugv)); }
+.map-marker.selected.type-uuv .map-marker-shape { filter: drop-shadow(0 0 6px var(--color-uuv)); }
+.map-marker.selected.type-uxv .map-marker-shape { filter: drop-shadow(0 0 6px var(--color-uxv)); }
 
 /* Pose estimate marker (translucent ring) */
 .estimate-marker {

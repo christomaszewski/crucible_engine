@@ -4,11 +4,16 @@
 
 const Icons = (() => {
     const svgs = {
-        uxv: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
-        uav: '<svg viewBox="0 0 24 24"><path d="M12 6l-6 4h4v4H6l6 4 6-4h-4v-4h4z" fill="currentColor"/></svg>',
-        usv: '<svg viewBox="0 0 24 24"><path d="M4 14c2-2 4 0 6-2s4 0 6-2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 14v-4l4-3 4 3v4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
-        ugv: '<svg viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="16" r="2" fill="currentColor"/><circle cx="16" cy="16" r="2" fill="currentColor"/></svg>',
-        uuv: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="20" y1="12" x2="22" y2="10" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="12" r="1" fill="currentColor"/></svg>',
+        // Diamond — aerial vehicle
+        uav: '<svg viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
+        // Circle — generic unmanned
+        uxv: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
+        // Pentagon — surface vessel
+        usv: '<svg viewBox="0 0 24 24"><polygon points="12,2 22,9 19,21 5,21 2,9" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
+        // Square — ground vehicle
+        ugv: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
+        // Inverted triangle — underwater
+        uuv: '<svg viewBox="0 0 24 24"><polygon points="3,4 21,4 12,22" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="11" r="2" fill="currentColor"/></svg>',
     };
 
     const typeLabels = {
