@@ -26,7 +26,7 @@ const Orchestrator = (() => {
         const agent = Agents.getAll()[agentId];
         if (!agent) return;
 
-        const composeFile = agent.stack_compose_file || './stacks/agent_stack.yml';
+        const composeFile = agent.stack_compose_file || '/opt/stacks/agent_stack.yml';
         if (!composeFile) {
             App.toast(`No compose file set for ${agentId}`, 'error');
             return;

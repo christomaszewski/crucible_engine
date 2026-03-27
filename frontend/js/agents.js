@@ -461,7 +461,7 @@ const Agents = (() => {
             input.className = 'pose-inline-input';
             input.style.width = '140px';
             input.value = rawVal;
-            input.placeholder = './stacks/agent_stack.yml';
+            input.placeholder = '/opt/stacks/agent_stack.yml';
 
             el.textContent = '';
             el.appendChild(input);
