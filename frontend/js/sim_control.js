@@ -8,6 +8,7 @@ const SimControl = (() => {
     let simTime = 0;
     let simStatus = 'READY';
     let simSpeed = 1.0;
+    let simDt = 0.01;
 
     function init() {
         document.getElementById('btn-play').addEventListener('click', () => {
@@ -31,6 +32,15 @@ const SimControl = (() => {
             WS.sendBridge({ cmd: 'set_speed', multiplier });
         });
 
+        // dt input — commit on Enter or blur
+        const dtInput = document.getElementById('sim-dt-input');
+        dtInput.addEventListener('change', () => {
+            const val = parseFloat(dtInput.value);
+            if (val > 0) {
+                WS.sendBridge({ cmd: 'set_sim_dt', dt: val });
+            }
+        });
+
         // Listen for status updates from backend
         WS.on('bridge:sim_status', (data) => {
             if (data.status) {
@@ -45,6 +55,14 @@ const SimControl = (() => {
             if (simStatus === 'READY') {
                 updateTime(0);
                 WS.sendBridge({ cmd: 'get_state' });
+            }
+        });
+
+        // Listen for dt confirmation from backend
+        WS.on('bridge:sim_dt', (data) => {
+            if (data.success && data.dt !== undefined) {
+                simDt = data.dt;
+                dtInput.value = simDt;
             }
         });
 
@@ -63,6 +81,14 @@ const SimControl = (() => {
         }
     }
 
+    function setDt(dt) {
+        if (dt !== undefined && dt > 0) {
+            simDt = dt;
+            const dtInput = document.getElementById('sim-dt-input');
+            if (dtInput) dtInput.value = simDt;
+        }
+    }
+
     function updateStatusDisplay() {
         const badge = document.getElementById('sim-status-badge');
         if (badge) {
@@ -71,7 +97,10 @@ const SimControl = (() => {
         }
         // Disable map dragging while sim is running
         MapView.setDraggable(simStatus !== 'RUNNING');
+        // dt input only editable in READY state
+        const dtInput = document.getElementById('sim-dt-input');
+        if (dtInput) dtInput.disabled = (simStatus !== 'READY');
     }
 
-    return { init, updateTime, setStatus };
+    return { init, updateTime, setStatus, setDt };
 })();

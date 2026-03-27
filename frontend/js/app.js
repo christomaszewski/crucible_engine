@@ -91,7 +91,9 @@ const App = (() => {
                     if (sel && Agents.getAll()[sel]) Agents.refreshDetail(sel);
                     SimControl.updateTime(data.data.sim_time_s || 0);
                     if (data.data.status) SimControl.setStatus(data.data.status);
+                    if (data.data.sim_dt) SimControl.setDt(data.data.sim_dt);
                     MapView.fitAgents();
+                    updatePlaceButton();
                 }
                 Agents.setLastKnownVersion(backendVersion);
             }
@@ -179,6 +181,17 @@ const App = (() => {
             vehicle_class: vehicleClass,
         });
 
+        // Optimistically add to UI so marker appears immediately
+        Agents.addAgent({
+            agent_id: agentId,
+            lat, lon, alt, heading,
+            sensors: [],
+            domain_id: domainId,
+            vehicle_type: vehicleType,
+            vehicle_class: vehicleClass,
+        });
+        updatePlaceButton();
+
         hideAddAgentModal();
     }
 
@@ -217,8 +230,9 @@ const App = (() => {
     }
 
     function updatePlaceButton() {
+        const nextId = Agents.generateId(placeVehicleType);
         document.getElementById('place-icon').innerHTML = Icons.getSvg(placeVehicleType);
-        document.getElementById('place-label').textContent = `Place ${Icons.getLabel(placeVehicleType)}`;
+        document.getElementById('place-label').textContent = `Place ${nextId}`;
 
         // Highlight active item in menu
         document.querySelectorAll('#place-menu .split-btn-item').forEach(item => {
@@ -241,6 +255,19 @@ const App = (() => {
                 vehicle_type: placeVehicleType,
                 vehicle_class: '',
             });
+
+            // Optimistically add to UI so marker appears immediately
+            Agents.addAgent({
+                agent_id: agentId,
+                lat, lon,
+                alt: 100.0,
+                heading: 0,
+                sensors: [],
+                domain_id: domainId,
+                vehicle_type: placeVehicleType,
+                vehicle_class: '',
+            });
+            updatePlaceButton();
         });
     }
 
@@ -261,7 +288,7 @@ const App = (() => {
         }, 3000);
     }
 
-    return { init, toast };
+    return { init, toast, updatePlaceButton };
 })();
 
 // Boot

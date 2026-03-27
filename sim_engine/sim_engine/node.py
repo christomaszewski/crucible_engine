@@ -566,6 +566,21 @@ class SimEngineNode(Node):
                     agent.velocity = Velocity()
                 response.success = True
                 response.message = "Simulation reset to initial conditions"
+            elif action.startswith("set_dt:"):
+                if self._status != "READY":
+                    response.success = False
+                    response.message = "Can only change dt in READY state"
+                else:
+                    new_dt = float(action.split(":")[1])
+                    if new_dt <= 0:
+                        response.success = False
+                        response.message = "sim_dt must be > 0"
+                    else:
+                        self._sim_dt = new_dt
+                        self._sim_cfg["sim_dt"] = new_dt
+                        self._rebuild_timer()
+                        response.success = True
+                        response.message = f"sim_dt set to {new_dt:.4f}s"
             else:
                 response.success = False
                 response.message = f"Unknown action: {action}"

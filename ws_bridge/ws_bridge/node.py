@@ -250,6 +250,20 @@ class WsBridgeNode(Node):
             "success": result.success,
         })
 
+    async def _cmd_set_sim_dt(self, ws, data: dict) -> None:
+        req = SimControl.Request()
+        req.action = f"set_dt:{data.get('dt', 0.01)}"
+
+        future = self._cli_sim_control.call_async(req)
+        result = await self._await_future(future)
+
+        await self.broadcast({
+            "type": "sim_dt",
+            "dt": float(data.get("dt", 0.01)),
+            "message": result.message,
+            "success": result.success,
+        })
+
     async def _cmd_set_speed(self, ws, data: dict) -> None:
         req = SetSpeed.Request()
         req.speed_multiplier = float(data.get("multiplier", 1.0))
@@ -333,6 +347,7 @@ class WsBridgeNode(Node):
         agents = {}
         sim_time = 0.0
         sim_status = "READY"
+        sim_dt = 0.01
 
         # Try to get full state from SaveScenario service
         try:
@@ -346,6 +361,7 @@ class WsBridgeNode(Node):
                 sim_cfg = config.get("sim", {})
                 sim_time = sim_cfg.get("sim_time_s", 0.0)
                 sim_status = sim_cfg.get("status", "READY")
+                sim_dt = sim_cfg.get("sim_dt", 0.01)
 
                 for agent_id, agent_cfg in config.get("agents", {}).items():
                     pose = agent_cfg.get("initial_pose", {})
@@ -382,6 +398,7 @@ class WsBridgeNode(Node):
                 "agents": agents,
                 "sim_time_s": sim_time,
                 "status": sim_status,
+                "sim_dt": sim_dt,
             },
             "state_version": self._state_version,
         }))

@@ -133,6 +133,11 @@
             <div class="status-bar-left">
                 <span class="sim-status-badge ready" id="sim-status-badge">READY</span>
                 <span id="sim-time">T: 0.000s</span>
+                <span class="dt-control">
+                    <label for="sim-dt-input">dt:</label>
+                    <input type="number" id="sim-dt-input" class="dt-input" value="0.01" step="0.001" min="0.001">
+                    <span class="dt-unit">s</span>
+                </span>
             </div>
             <span id="agent-summary">0 agents | 0 sensors</span>
         </footer>

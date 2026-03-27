@@ -41,6 +41,7 @@ const Agents = (() => {
         }
         renderList();
         updateSummary();
+        if (typeof App !== 'undefined' && App.updatePlaceButton) App.updatePlaceButton();
     }
 
     function updateGroundTruth(data) {

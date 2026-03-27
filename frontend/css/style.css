@@ -112,6 +112,41 @@ html, body {
     gap: 12px;
 }
 
+.dt-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.dt-input {
+    width: 60px;
+    padding: 1px 4px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-align: right;
+}
+
+.dt-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.dt-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.dt-unit {
+    color: var(--text-muted);
+}
+
 .sim-status-badge {
     display: inline-block;
     padding: 1px 8px;
