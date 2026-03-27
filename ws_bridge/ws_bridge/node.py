@@ -18,6 +18,7 @@ from crucible_msgs.srv import (
     ConfigureSensor,
     LoadScenario,
     RemoveAgent,
+    RemoveSensor,
     SaveScenario,
     SetPose,
     SetSpeed,
@@ -43,6 +44,7 @@ class WsBridgeNode(Node):
         )
         self._cli_load = self.create_client(LoadScenario, "/sim/load_scenario")
         self._cli_save = self.create_client(SaveScenario, "/sim/save_scenario")
+        self._cli_remove_sensor = self.create_client(RemoveSensor, "/sim/remove_sensor")
         self._cli_set_pose = self.create_client(SetPose, "/sim/set_pose")
         self._cli_sim_control = self.create_client(SimControl, "/sim/sim_control")
         self._cli_set_speed = self.create_client(SetSpeed, "/sim/set_speed")
@@ -173,6 +175,22 @@ class WsBridgeNode(Node):
         req.config_json = json.dumps(data["config"])
 
         future = self._cli_configure.call_async(req)
+        result = await self._await_future(future)
+
+        await ws.send(
+            json.dumps({
+                "type": "info",
+                "message": result.message,
+                "success": result.success,
+            })
+        )
+
+    async def _cmd_remove_sensor(self, ws, data: dict) -> None:
+        req = RemoveSensor.Request()
+        req.agent_id = data["agent_id"]
+        req.sensor_name = data["sensor_name"]
+
+        future = self._cli_remove_sensor.call_async(req)
         result = await self._await_future(future)
 
         await ws.send(

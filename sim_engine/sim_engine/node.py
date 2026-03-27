@@ -26,6 +26,7 @@ from crucible_msgs.srv import (
     ConfigureSensor,
     LoadScenario,
     RemoveAgent,
+    RemoveSensor,
     SaveScenario,
     SetPose,
     SetSpeed,
@@ -147,6 +148,9 @@ class SimEngineNode(Node):
         )
         self.create_service(
             SaveScenario, "/sim/save_scenario", self._srv_save_scenario
+        )
+        self.create_service(
+            RemoveSensor, "/sim/remove_sensor", self._srv_remove_sensor
         )
         self.create_service(
             SetPose, "/sim/set_pose", self._srv_set_pose
@@ -401,6 +405,34 @@ class SimEngineNode(Node):
 
             response.success = True
             response.message = f"Sensor '{sensor_name}' configured on '{request.agent_id}'"
+        except Exception as e:
+            response.success = False
+            response.message = str(e)
+        return response
+
+    def _srv_remove_sensor(
+        self,
+        request: RemoveSensor.Request,
+        response: RemoveSensor.Response,
+    ) -> RemoveSensor.Response:
+        try:
+            agent = self._world.get_agent(request.agent_id)
+            sensor_name = request.sensor_name
+
+            if sensor_name not in agent.sensors:
+                response.success = False
+                response.message = f"Sensor '{sensor_name}' not found on '{request.agent_id}'"
+                return response
+
+            # Destroy publisher
+            pubs = self._agent_pubs.get(request.agent_id)
+            if pubs and sensor_name in pubs.sensor_pubs:
+                self.destroy_publisher(pubs.sensor_pubs.pop(sensor_name))
+
+            del agent.sensors[sensor_name]
+
+            response.success = True
+            response.message = f"Sensor '{sensor_name}' removed from '{request.agent_id}'"
         except Exception as e:
             response.success = False
             response.message = str(e)
