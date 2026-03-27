@@ -1217,23 +1217,57 @@ select.form-input {
     text-align: center;
 }
 
-/* Detail panel editable fields */
-.detail-value {
+/* Detail panel pose rows — sensor-config-inspired click-to-edit */
+.pose-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.pose-label {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.pose-val {
+    color: var(--text-secondary);
+    text-align: right;
+    padding: 1px 4px;
+    border-radius: 2px;
+    transition: background 0.12s;
+}
+
+.pose-val.editable {
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+.pose-val.editable:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.pose-val.readonly {
+    color: var(--text-secondary);
+}
+
+.pose-val.readonly:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.pose-inline-input {
+    width: 80px;
+    padding: 0 2px;
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    background: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-mono);
-    font-size: 12px;
-}
-
-.detail-edit {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 2px 6px;
-    width: 100%;
-}
-
-.detail-edit:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    font-size: 11px;
+    outline: none;
+    text-align: right;
 }
 
 .place-mode-banner {

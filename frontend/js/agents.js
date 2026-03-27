@@ -66,6 +66,8 @@ const Agents = (() => {
         agent.alt = data.alt;
         agent.heading = data.heading;
         MapView.updateAgent(data.agent_id, data.lat, data.lon, data.heading);
+        // Live-update detail panel if this agent is selected
+        if (selectedId === data.agent_id) _updateDetailValues(data.agent_id);
     }
 
     function selectAgent(agentId) {
@@ -191,11 +193,6 @@ const Agents = (() => {
         });
     }
 
-    function _isEditable() {
-        const s = SimControl.getStatus();
-        return s !== 'RUNNING';
-    }
-
     function showDetail(agentId) {
         const panel = document.getElementById('detail-panel');
         const agent = agents[agentId];
@@ -207,12 +204,9 @@ const Agents = (() => {
         const dvtype = (agent.vehicle_type || Icons.getTypeFromId(agentId)).toLowerCase();
         const isUuv = dvtype === 'uuv';
         const altLabel = isUuv ? 'Depth' : 'Altitude';
-        const altVal = isUuv ? Math.abs(agent.alt).toFixed(1) : agent.alt.toFixed(1);
-        const headingDeg = ((agent.heading || 0) * 180 / Math.PI).toFixed(1);
-        const editable = _isEditable();
-        const dis = editable ? '' : 'disabled';
-        // UGV/USV have no altitude control
         const noAlt = dvtype === 'ugv' || dvtype === 'usv';
+        const running = SimControl.getStatus() === 'RUNNING';
+        const editClass = running ? 'pose-val readonly' : 'pose-val editable';
 
         panel.innerHTML = `
             <button class="detail-close" id="detail-close">&times;</button>
@@ -221,30 +215,30 @@ const Agents = (() => {
                     <span class="agent-type-icon type-${dvtype}">${Icons.getSvg(dvtype)}</span>
                     Agent: ${agentId}
                 </div>
-                <div class="form-row">
-                    <label class="form-label">Type</label>
-                    <span class="detail-value">${Icons.getLabel(dvtype)}${agent.vehicle_class ? ' / ' + agent.vehicle_class : ''}</span>
+                <div class="pose-row">
+                    <span class="pose-label">Type</span>
+                    <span class="pose-val">${Icons.getLabel(dvtype)}${agent.vehicle_class ? ' / ' + agent.vehicle_class : ''}</span>
                 </div>
-                <div class="form-row">
-                    <label class="form-label">DDS Domain</label>
-                    <span class="detail-value">${agent.domain_id}</span>
+                <div class="pose-row">
+                    <span class="pose-label">DDS Domain</span>
+                    <span class="pose-val">${agent.domain_id}</span>
                 </div>
-                <div class="form-row">
-                    <label class="form-label">Latitude</label>
-                    <input class="form-input detail-edit" id="detail-lat" type="number" step="any" value="${agent.lat.toFixed(6)}" ${dis}>
+                <div class="pose-row">
+                    <span class="pose-label">Latitude</span>
+                    <span class="${editClass}" id="detail-lat" data-field="lat">${agent.lat.toFixed(6)}</span>
                 </div>
-                <div class="form-row">
-                    <label class="form-label">Longitude</label>
-                    <input class="form-input detail-edit" id="detail-lon" type="number" step="any" value="${agent.lon.toFixed(6)}" ${dis}>
+                <div class="pose-row">
+                    <span class="pose-label">Longitude</span>
+                    <span class="${editClass}" id="detail-lon" data-field="lon">${agent.lon.toFixed(6)}</span>
                 </div>
-                <div class="form-row">
-                    <label class="form-label">Heading (&deg;)</label>
-                    <input class="form-input detail-edit" id="detail-heading" type="number" step="0.1" value="${headingDeg}" ${dis}>
+                <div class="pose-row">
+                    <span class="pose-label">Heading</span>
+                    <span class="${editClass}" id="detail-heading" data-field="heading">${((agent.heading || 0) * 180 / Math.PI).toFixed(1)}&deg;</span>
                 </div>
                 ${noAlt ? '' : `
-                <div class="form-row">
-                    <label class="form-label">${altLabel} (m)</label>
-                    <input class="form-input detail-edit" id="detail-alt" type="number" step="0.1" min="0" value="${altVal}" ${dis}>
+                <div class="pose-row">
+                    <span class="pose-label">${altLabel}</span>
+                    <span class="${editClass}" id="detail-alt" data-field="alt">${isUuv ? Math.abs(agent.alt).toFixed(1) : agent.alt.toFixed(1)}m</span>
                 </div>
                 `}
             </div>
@@ -276,33 +270,9 @@ const Agents = (() => {
             renderList();
         });
 
-        // Editable field commit on change
-        const commitPose = () => {
-            const lat = parseFloat(document.getElementById('detail-lat').value);
-            const lon = parseFloat(document.getElementById('detail-lon').value);
-            const hdgDeg = parseFloat(document.getElementById('detail-heading').value);
-            const hdgRad = hdgDeg * Math.PI / 180;
-            const altInput = document.getElementById('detail-alt');
-            let alt = agent.alt;
-            if (altInput) {
-                const raw = parseFloat(altInput.value);
-                alt = isUuv ? -Math.abs(raw) : Math.max(0, raw);
-            }
-            agent.lat = lat;
-            agent.lon = lon;
-            agent.heading = hdgRad;
-            agent.alt = alt;
-            WS.sendBridge({
-                cmd: 'set_pose',
-                agent_id: agentId,
-                lat, lon, alt, heading: hdgRad,
-            });
-            MapView.updateAgent(agentId, lat, lon, hdgRad);
-            renderList();
-        };
-
-        document.querySelectorAll('#detail-panel .detail-edit').forEach(input => {
-            input.addEventListener('change', commitPose);
+        // Click-to-edit on pose values (sensor config style)
+        panel.querySelectorAll('.pose-val.editable').forEach(el => {
+            el.addEventListener('click', () => _startPoseEdit(el, agentId));
         });
 
         // Event listeners
@@ -324,6 +294,86 @@ const Agents = (() => {
 
         // Render sensor configs
         Sensors.renderSensorConfig(agentId, agent.sensors || []);
+    }
+
+    function _startPoseEdit(el, agentId) {
+        if (el.querySelector('input')) return;
+        const field = el.dataset.field;
+        const agent = agents[agentId];
+        if (!agent) return;
+
+        const dvtype = (agent.vehicle_type || Icons.getTypeFromId(agentId)).toLowerCase();
+        const isUuv = dvtype === 'uuv';
+
+        // Get raw numeric value for editing
+        let rawVal;
+        if (field === 'heading') {
+            rawVal = ((agent.heading || 0) * 180 / Math.PI).toFixed(1);
+        } else if (field === 'alt') {
+            rawVal = isUuv ? Math.abs(agent.alt).toFixed(1) : agent.alt.toFixed(1);
+        } else {
+            rawVal = agent[field]?.toFixed(6) ?? '0';
+        }
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = (field === 'lat' || field === 'lon') ? 'any' : '0.1';
+        input.className = 'pose-inline-input';
+        input.value = rawVal;
+
+        el.textContent = '';
+        el.appendChild(input);
+        input.focus();
+        input.select();
+
+        const commit = () => {
+            const newVal = parseFloat(input.value);
+            if (isNaN(newVal)) {
+                _updateDetailValues(agentId);
+                return;
+            }
+
+            if (field === 'lat') agent.lat = newVal;
+            else if (field === 'lon') agent.lon = newVal;
+            else if (field === 'heading') agent.heading = newVal * Math.PI / 180;
+            else if (field === 'alt') agent.alt = isUuv ? -Math.abs(newVal) : Math.max(0, newVal);
+
+            WS.sendBridge({
+                cmd: 'set_pose',
+                agent_id: agentId,
+                lat: agent.lat,
+                lon: agent.lon,
+                alt: agent.alt,
+                heading: agent.heading,
+            });
+            MapView.updateAgent(agentId, agent.lat, agent.lon, agent.heading);
+            _updateDetailValues(agentId);
+            renderList();
+        };
+
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            if (e.key === 'Escape') { _updateDetailValues(agentId); }
+        });
+    }
+
+    function _updateDetailValues(agentId) {
+        const agent = agents[agentId];
+        if (!agent) return;
+        const dvtype = (agent.vehicle_type || Icons.getTypeFromId(agentId)).toLowerCase();
+        const isUuv = dvtype === 'uuv';
+
+        const latEl = document.getElementById('detail-lat');
+        const lonEl = document.getElementById('detail-lon');
+        const hdgEl = document.getElementById('detail-heading');
+        const altEl = document.getElementById('detail-alt');
+
+        // Only update if not currently being edited (no child input)
+        if (latEl && !latEl.querySelector('input')) latEl.textContent = agent.lat.toFixed(6);
+        if (lonEl && !lonEl.querySelector('input')) lonEl.textContent = agent.lon.toFixed(6);
+        if (hdgEl && !hdgEl.querySelector('input')) hdgEl.innerHTML = `${((agent.heading || 0) * 180 / Math.PI).toFixed(1)}&deg;`;
+        if (altEl && !altEl.querySelector('input')) altEl.textContent = `${isUuv ? Math.abs(agent.alt).toFixed(1) : agent.alt.toFixed(1)}m`;
     }
 
     function hideDetail() {

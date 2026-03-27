@@ -51,6 +51,10 @@ const SimControl = (() => {
             }
             updateStatusDisplay();
 
+            // Refresh detail panel to toggle editable state
+            const sel = Agents.getSelected();
+            if (sel) Agents.refreshDetail(sel);
+
             // On reset (READY): update time to 0 and refresh agent positions
             if (simStatus === 'READY') {
                 updateTime(0);
