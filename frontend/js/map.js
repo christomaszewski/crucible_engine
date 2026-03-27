@@ -13,8 +13,10 @@ const MapView = (() => {
         map = L.map('map', {
             center: [38.9072, -77.0369],
             zoom: 15,
-            zoomControl: true,
+            zoomControl: false,
         });
+
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         // Dark tile layer
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
