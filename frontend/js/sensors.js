@@ -31,6 +31,13 @@ const Sensors = (() => {
         },
     };
 
+    const MSG_TYPE_MAP = {
+        navsatfix: 'sensor_msgs/NavSatFix',
+        imu: 'sensor_msgs/Imu',
+        altimeter: 'std_msgs/Float64',
+        twr_radio: 'crucible_msgs/RangeArray',
+    };
+
     function renderSensorConfig(agentId, sensorNames) {
         const area = document.getElementById('sensor-config-area');
         if (!area) return;
@@ -40,18 +47,59 @@ const Sensors = (() => {
             return;
         }
 
-        area.innerHTML = sensorNames.map(name => `
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 0;">
-                <span class="sensor-badge">${name}</span>
-                <button class="btn btn-sm btn-danger" data-remove-sensor="${name}">&times;</button>
-            </div>
-        `).join('');
+        const agent = Agents.getAll()[agentId];
+        const configs = agent?.sensor_configs || {};
+
+        area.innerHTML = sensorNames.map(name => {
+            const cfg = configs[name] || SENSOR_DEFAULTS[name] || {};
+            const sensorType = cfg.type || name;
+            const topicSuffix = cfg.topic_suffix || SENSOR_DEFAULTS[sensorType]?.topic_suffix || name;
+            const rateHz = cfg.rate_hz ?? SENSOR_DEFAULTS[sensorType]?.rate_hz ?? '?';
+            const msgType = MSG_TYPE_MAP[sensorType] || 'unknown';
+            const fullTopic = `/${agentId}/${topicSuffix}`;
+            const noise = cfg.noise || {};
+            const noiseRows = Object.entries(noise).map(([k, v]) =>
+                `<div class="sensor-detail-row"><span class="sensor-detail-key">${k}</span><span>${v}</span></div>`
+            ).join('');
+
+            // Extra fields (max_range_m, use_agl, etc.)
+            const skipKeys = new Set(['type', 'topic_suffix', 'rate_hz', 'noise', 'seed']);
+            const extraRows = Object.entries(cfg)
+                .filter(([k]) => !skipKeys.has(k))
+                .map(([k, v]) =>
+                    `<div class="sensor-detail-row"><span class="sensor-detail-key">${k}</span><span>${v}</span></div>`
+                ).join('');
+
+            return `
+                <div class="sensor-card" data-sensor="${name}">
+                    <div class="sensor-card-header">
+                        <span class="sensor-badge">${name}</span>
+                        <span class="sensor-card-toggle">&#9662;</span>
+                    </div>
+                    <div class="sensor-card-body">
+                        <div class="sensor-detail-row"><span class="sensor-detail-key">topic</span><span class="sensor-detail-topic">${fullTopic}</span></div>
+                        <div class="sensor-detail-row"><span class="sensor-detail-key">msg_type</span><span>${msgType}</span></div>
+                        <div class="sensor-detail-row"><span class="sensor-detail-key">rate_hz</span><span>${rateHz}</span></div>
+                        ${extraRows}
+                        ${noiseRows ? '<div class="sensor-detail-divider">noise</div>' + noiseRows : ''}
+                        <button class="btn btn-sm btn-danger sensor-remove-btn" data-remove-sensor="${name}">Remove</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Toggle expand/collapse
+        area.querySelectorAll('.sensor-card-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.parentElement.classList.toggle('expanded');
+            });
+        });
 
         // Remove sensor handlers
         area.querySelectorAll('[data-remove-sensor]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const sensorName = btn.dataset.removeSensor;
-                removeSensor(agentId, sensorName);
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeSensor(agentId, btn.dataset.removeSensor);
             });
         });
     }
@@ -105,6 +153,8 @@ const Sensors = (() => {
             if (!agent.sensors.includes(sensorType)) {
                 agent.sensors.push(sensorType);
             }
+            if (!agent.sensor_configs) agent.sensor_configs = {};
+            agent.sensor_configs[sensorType] = config;
         }
 
         // Re-render
@@ -122,8 +172,13 @@ const Sensors = (() => {
         });
 
         const agent = Agents.getAll()[agentId];
-        if (agent && agent.sensors) {
-            agent.sensors = agent.sensors.filter(s => s !== sensorName);
+        if (agent) {
+            if (agent.sensors) {
+                agent.sensors = agent.sensors.filter(s => s !== sensorName);
+            }
+            if (agent.sensor_configs) {
+                delete agent.sensor_configs[sensorName];
+            }
         }
 
         Agents.selectAgent(agentId);

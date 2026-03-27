@@ -52,14 +52,20 @@ const MapView = (() => {
         uuv: '<polygon points="4,6 36,6 20,38" />',
     };
 
-    function createAgentIcon(agentId, selected = false) {
+    function _headingToDeg(radians) {
+        // heading: 0 = north, CW positive (radians) → CSS degrees
+        return (radians * 180 / Math.PI);
+    }
+
+    function createAgentIcon(agentId, selected = false, heading = 0) {
         const vtype = Icons.getTypeFromId(agentId);
         const shape = markerShapes[vtype] || markerShapes.uxv;
         const selClass = selected ? 'selected' : '';
+        const deg = _headingToDeg(heading);
         return L.divIcon({
             className: '',
-            html: `<div class="map-marker type-${vtype} ${selClass}">
-                <svg class="map-marker-shape" viewBox="0 0 40 40">${shape}</svg>
+            html: `<div class="map-marker type-${vtype} ${selClass}" data-agent="${agentId}">
+                <svg class="map-marker-shape" viewBox="0 0 40 40" style="transform: rotate(${deg}deg)">${shape}</svg>
                 <span class="map-marker-label">${agentId}</span>
             </div>`,
             iconSize: [60, 46],
@@ -112,6 +118,15 @@ const MapView = (() => {
         const marker = agentMarkers[agentId];
         if (!marker) return;
         marker.setLatLng([lat, lon]);
+
+        // Rotate shape via DOM (avoids recreating the icon on every GT update)
+        const el = marker.getElement();
+        if (el) {
+            const shape = el.querySelector('.map-marker-shape');
+            if (shape) {
+                shape.style.transform = `rotate(${_headingToDeg(heading)}deg)`;
+            }
+        }
     }
 
     function removeAgent(agentId) {
@@ -124,9 +139,10 @@ const MapView = (() => {
     }
 
     function selectAgent(agentId) {
-        // Update all marker icons
+        // Update all marker icons (preserve heading)
         for (const [aid, marker] of Object.entries(agentMarkers)) {
-            marker.setIcon(createAgentIcon(aid, aid === agentId));
+            const agentData = Agents.getAll()[aid] || {};
+            marker.setIcon(createAgentIcon(aid, aid === agentId, agentData.heading || 0));
         }
     }
 
@@ -184,6 +200,35 @@ const MapView = (() => {
         }
     }
 
+    const hiddenTypes = new Set();
+
+    function setTypeFilter(vehicleType, visible) {
+        if (visible) {
+            hiddenTypes.delete(vehicleType);
+        } else {
+            hiddenTypes.add(vehicleType);
+        }
+        for (const [aid, marker] of Object.entries(agentMarkers)) {
+            const vtype = Icons.getTypeFromId(aid);
+            const el = marker.getElement();
+            if (el) {
+                el.style.display = hiddenTypes.has(vtype) ? 'none' : '';
+            }
+        }
+        // Also hide/show estimate markers
+        for (const [aid, marker] of Object.entries(estimateMarkers)) {
+            const vtype = Icons.getTypeFromId(aid);
+            const el = marker.getElement();
+            if (el) {
+                el.style.display = hiddenTypes.has(vtype) ? 'none' : '';
+            }
+        }
+    }
+
+    function isTypeHidden(vehicleType) {
+        return hiddenTypes.has(vehicleType);
+    }
+
     function getMap() { return map; }
 
     return {
@@ -198,6 +243,8 @@ const MapView = (() => {
         exitPlaceMode,
         fitAgents,
         setDraggable,
+        setTypeFilter,
+        isTypeHidden,
         getMap,
     };
 })();

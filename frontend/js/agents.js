@@ -18,6 +18,7 @@ const Agents = (() => {
             alt: data.alt || 0,
             heading: data.heading || 0,
             sensors: data.sensors || [],
+            sensor_configs: data.sensor_configs || {},
             domain_id: data.domain_id || 0,
             vehicle_type: data.vehicle_type || '',
             vehicle_class: data.vehicle_class || '',
@@ -65,6 +66,14 @@ const Agents = (() => {
     }
 
     function selectAgent(agentId) {
+        if (selectedId === agentId) {
+            // Toggle off if clicking the same agent
+            selectedId = null;
+            MapView.selectAgent(null);
+            hideDetail();
+            renderList();
+            return;
+        }
         selectedId = agentId;
         MapView.selectAgent(agentId);
         renderList();
@@ -120,6 +129,7 @@ const Agents = (() => {
 
         const dvtype = (agent.vehicle_type || Icons.getTypeFromId(agentId)).toLowerCase();
         panel.innerHTML = `
+            <button class="detail-close" id="detail-close">&times;</button>
             <div class="detail-section">
                 <div class="detail-title">
                     <span class="agent-type-icon type-${dvtype}">${Icons.getSvg(dvtype)}</span>
@@ -163,6 +173,14 @@ const Agents = (() => {
         `;
 
         panel.classList.add('visible');
+
+        // Close button
+        document.getElementById('detail-close').addEventListener('click', () => {
+            selectedId = null;
+            MapView.selectAgent(null);
+            hideDetail();
+            renderList();
+        });
 
         // Event listeners
         document.getElementById('btn-add-sensor').addEventListener('click', () => {

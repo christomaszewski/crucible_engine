@@ -447,18 +447,130 @@ html, body {
     color: var(--text-secondary);
 }
 
+/* -- Sensor expandable cards -------------------------------------------- */
+
+.sensor-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+    overflow: hidden;
+}
+
+.sensor-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    cursor: pointer;
+    background: var(--bg-tertiary);
+    transition: background 0.15s;
+}
+
+.sensor-card-header:hover {
+    background: var(--bg-primary);
+}
+
+.sensor-card-toggle {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.15s;
+}
+
+.sensor-card.expanded .sensor-card-toggle {
+    transform: rotate(180deg);
+}
+
+.sensor-card-body {
+    display: none;
+    padding: 8px;
+    font-size: 11px;
+    border-top: 1px solid var(--border);
+}
+
+.sensor-card.expanded .sensor-card-body {
+    display: block;
+}
+
+.sensor-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 2px 0;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+}
+
+.sensor-detail-key {
+    color: var(--text-muted);
+    margin-right: 8px;
+}
+
+.sensor-detail-topic {
+    word-break: break-all;
+    text-align: right;
+    color: var(--accent);
+}
+
+.sensor-detail-divider {
+    margin-top: 4px;
+    padding: 2px 0;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+}
+
+.sensor-remove-btn {
+    margin-top: 6px;
+    width: 100%;
+}
+
 /* -- Detail panel (right side of sidebar or overlay) -------------------- */
 
 #detail-panel {
     display: none;
     flex-direction: column;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 280px;
+    max-height: calc(100% - 24px);
     overflow-y: auto;
-    flex: 1;
-    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    z-index: 800;
 }
 
 #detail-panel.visible {
     display: flex;
+}
+
+.detail-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 1;
+    transition: background var(--transition), color var(--transition);
+}
+
+.detail-close:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
 }
 
 .detail-section {
@@ -634,6 +746,53 @@ select.form-input {
 
 .map-overlay .btn {
     box-shadow: var(--shadow);
+}
+
+/* -- Map filter overlay ------------------------------------------------- */
+
+.map-filter {
+    position: absolute;
+    top: 12px;
+    right: 56px;
+    z-index: 1000;
+    display: flex;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(17, 24, 32, 0.88);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 11px;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    user-select: none;
+    white-space: nowrap;
+}
+
+.filter-item input[type="checkbox"] {
+    display: none;
+}
+
+.filter-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    opacity: 1;
+    transition: opacity 0.15s;
+}
+
+.filter-item:has(input:not(:checked)) {
+    color: var(--text-muted);
+}
+
+.filter-item:has(input:not(:checked)) .filter-swatch {
+    opacity: 0.25;
 }
 
 /* -- Accuracy panel (bottom of map) ------------------------------------- */

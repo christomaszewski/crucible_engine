@@ -50,23 +50,23 @@
                     <button class="btn split-btn-arrow" id="btn-place-dropdown">&#9662;</button>
                     <div class="split-btn-menu" id="place-menu">
                         <div class="split-btn-item" data-type="uxv">
-                            <svg class="vehicle-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="12" y1="2" x2="12" y2="8" stroke="currentColor" stroke-width="1.2"/><line x1="12" y1="16" x2="12" y2="22" stroke="currentColor" stroke-width="1.2"/><line x1="2" y1="12" x2="8" y2="12" stroke="currentColor" stroke-width="1.2"/><line x1="16" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
                             UxV
                         </div>
                         <div class="split-btn-item" data-type="uav">
-                            <svg class="vehicle-icon" viewBox="0 0 24 24"><path d="M12 6l-6 4h4v4H6l6 4 6-4h-4v-4h4z" fill="currentColor"/></svg>
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="12" y1="9" x2="6" y2="3" stroke="currentColor" stroke-width="1.2"/><line x1="12" y1="9" x2="18" y2="3" stroke="currentColor" stroke-width="1.2"/><line x1="12" y1="15" x2="6" y2="21" stroke="currentColor" stroke-width="1.2"/><line x1="12" y1="15" x2="18" y2="21" stroke="currentColor" stroke-width="1.2"/><circle cx="6" cy="3" r="2" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="18" cy="3" r="2" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="6" cy="21" r="2" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="18" cy="21" r="2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
                             UAV
                         </div>
                         <div class="split-btn-item" data-type="usv">
-                            <svg class="vehicle-icon" viewBox="0 0 24 24"><path d="M4 14c2-2 4 0 6-2s4 0 6-2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 14v-4l4-3 4 3v4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><path d="M3 15 C6 11, 10 11, 12 13 C14 15, 18 15, 21 11" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5 14 L7 7 L12 5 L17 7 L19 14" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="12" y1="5" x2="12" y2="2" stroke="currentColor" stroke-width="1.2"/></svg>
                             USV
                         </div>
                         <div class="split-btn-item" data-type="ugv">
-                            <svg class="vehicle-icon" viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="16" r="2" fill="currentColor"/><circle cx="16" cy="16" r="2" fill="currentColor"/></svg>
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="7.5" cy="17" r="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="16.5" cy="17" r="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="7.5" y1="14" x2="7.5" y2="14.5" stroke="currentColor" stroke-width="1.2"/><line x1="16.5" y1="14" x2="16.5" y2="14.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 7 L8 4 L16 4 L18 7" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
                             UGV
                         </div>
                         <div class="split-btn-item" data-type="uuv">
-                            <svg class="vehicle-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="20" y1="12" x2="22" y2="10" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="12" r="1" fill="currentColor"/></svg>
+                            <svg class="vehicle-icon" viewBox="0 0 24 24"><ellipse cx="11" cy="12" rx="9" ry="4.5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M20 9 L22 7 L22 17 L20 15" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="6" cy="12" r="1" fill="currentColor"/><line x1="11" y1="7.5" x2="11" y2="5" stroke="currentColor" stroke-width="1.2"/><rect x="9.5" y="4" width="3" height="2" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
                             UUV
                         </div>
                     </div>
@@ -98,14 +98,15 @@
                 </div>
             </div>
             <div id="agent-list"></div>
-
-            <div id="detail-panel">
-                <!-- Populated dynamically when agent is selected -->
-            </div>
         </aside>
 
         <!-- Map -->
         <main id="map-container">
+            <!-- Agent detail panel (floating over map, snapped to sidebar) -->
+            <div id="detail-panel">
+                <button class="detail-close" id="detail-close">&times;</button>
+                <!-- Populated dynamically when agent is selected -->
+            </div>
             <div id="map"></div>
 
             <div class="place-mode-banner" id="place-banner">
@@ -114,6 +115,14 @@
 
             <div class="map-overlay">
                 <button class="btn btn-sm" id="btn-fit-agents" title="Fit all agents">&#9635;</button>
+            </div>
+
+            <div class="map-filter" id="map-filter">
+                <label class="filter-item"><input type="checkbox" data-type="uav" checked><span class="filter-swatch" style="background:var(--color-uav)"></span>Air</label>
+                <label class="filter-item"><input type="checkbox" data-type="usv" checked><span class="filter-swatch" style="background:var(--color-usv)"></span>Surface</label>
+                <label class="filter-item"><input type="checkbox" data-type="ugv" checked><span class="filter-swatch" style="background:var(--color-ugv)"></span>Ground</label>
+                <label class="filter-item"><input type="checkbox" data-type="uuv" checked><span class="filter-swatch" style="background:var(--color-uuv)"></span>Underwater</label>
+                <label class="filter-item"><input type="checkbox" data-type="uxv" checked><span class="filter-swatch" style="background:var(--color-uxv)"></span>Other</label>
             </div>
 
             <div id="accuracy-panel"></div>

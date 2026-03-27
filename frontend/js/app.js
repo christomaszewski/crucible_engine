@@ -94,6 +94,13 @@ const App = (() => {
         document.getElementById('btn-add-agent').addEventListener('click', showAddAgentModal);
         document.getElementById('btn-fit-agents').addEventListener('click', () => MapView.fitAgents());
 
+        // Map type filter checkboxes
+        document.querySelectorAll('#map-filter input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                MapView.setTypeFilter(cb.dataset.type, cb.checked);
+            });
+        });
+
         // Place split button
         initPlaceButton();
 

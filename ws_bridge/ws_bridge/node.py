@@ -346,6 +346,7 @@ class WsBridgeNode(Node):
                         "alt": pose.get("alt", 0.0),
                         "heading": pose.get("heading", 0.0),
                         "sensors": list(sensors_cfg.keys()),
+                        "sensor_configs": sensors_cfg,
                         "domain_id": agent_cfg.get("domain_id", 0),
                         "vehicle_type": agent_cfg.get("vehicle_type", ""),
                         "vehicle_class": agent_cfg.get("vehicle_class", ""),
