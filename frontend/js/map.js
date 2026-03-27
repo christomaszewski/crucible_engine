@@ -157,6 +157,16 @@ const MapView = (() => {
         map.fitBounds(group.getBounds().pad(0.2));
     }
 
+    function setDraggable(enabled) {
+        for (const marker of Object.values(agentMarkers)) {
+            if (enabled) {
+                marker.dragging.enable();
+            } else {
+                marker.dragging.disable();
+            }
+        }
+    }
+
     function getMap() { return map; }
 
     return {
@@ -170,6 +180,7 @@ const MapView = (() => {
         enterPlaceMode,
         exitPlaceMode,
         fitAgents,
+        setDraggable,
         getMap,
     };
 })();

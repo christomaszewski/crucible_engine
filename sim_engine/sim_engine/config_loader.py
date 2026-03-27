@@ -91,7 +91,7 @@ def build_world_from_config(config: dict[str, Any]) -> tuple[WorldState, dict]:
 
     Returns:
         Tuple of (world_state, sim_config) where sim_config contains
-        top-level sim parameters (tick_rate_hz, speed_multiplier, etc.)
+        top-level sim parameters (sim_dt, speed_multiplier, etc.)
     """
     world = WorldState()
     sim_cfg = config.get("sim", {})
@@ -115,7 +115,7 @@ def save_scenario(world: WorldState, sim_cfg: dict[str, Any]) -> str:
     """Serialize the current world state and sim config to YAML."""
     config: dict[str, Any] = {
         "sim": {
-            "tick_rate_hz": sim_cfg.get("tick_rate_hz", 100),
+            "sim_dt": sim_cfg.get("sim_dt", 0.01),
             "speed_multiplier": sim_cfg.get("speed_multiplier", 1.0),
             "seed": sim_cfg.get("seed", 42),
         },

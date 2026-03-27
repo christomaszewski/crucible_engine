@@ -19,6 +19,9 @@ from crucible_msgs.srv import (
     LoadScenario,
     RemoveAgent,
     SaveScenario,
+    SetPose,
+    SetSpeed,
+    SimControl,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,6 +43,9 @@ class WsBridgeNode(Node):
         )
         self._cli_load = self.create_client(LoadScenario, "/sim/load_scenario")
         self._cli_save = self.create_client(SaveScenario, "/sim/save_scenario")
+        self._cli_set_pose = self.create_client(SetPose, "/sim/set_pose")
+        self._cli_sim_control = self.create_client(SimControl, "/sim/sim_control")
+        self._cli_set_speed = self.create_client(SetSpeed, "/sim/set_speed")
 
         # Ground truth subscribers (created per agent)
         self._gt_subs: dict[str, Any] = {}
@@ -186,6 +192,50 @@ class WsBridgeNode(Node):
 
         await self.broadcast({
             "type": "info",
+            "message": result.message,
+            "success": result.success,
+        })
+
+    async def _cmd_set_pose(self, ws, data: dict) -> None:
+        req = SetPose.Request()
+        req.agent_id = data["agent_id"]
+        req.latitude = float(data.get("lat", 0.0))
+        req.longitude = float(data.get("lon", 0.0))
+        req.altitude = float(data.get("alt", 0.0))
+        req.heading = float(data.get("heading", 0.0))
+
+        future = self._cli_set_pose.call_async(req)
+        result = await self._await_future(future)
+
+        if not result.success:
+            await ws.send(
+                json.dumps({"type": "error", "message": result.message})
+            )
+
+    async def _cmd_sim_control(self, ws, data: dict) -> None:
+        req = SimControl.Request()
+        req.action = data.get("action", "")
+
+        future = self._cli_sim_control.call_async(req)
+        result = await self._await_future(future)
+
+        await self.broadcast({
+            "type": "sim_status",
+            "status": result.status,
+            "message": result.message,
+            "success": result.success,
+        })
+
+    async def _cmd_set_speed(self, ws, data: dict) -> None:
+        req = SetSpeed.Request()
+        req.speed_multiplier = float(data.get("multiplier", 1.0))
+
+        future = self._cli_set_speed.call_async(req)
+        result = await self._await_future(future)
+
+        await self.broadcast({
+            "type": "sim_status",
+            "speed": result.effective_multiplier,
             "message": result.message,
             "success": result.success,
         })

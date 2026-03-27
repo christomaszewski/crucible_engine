@@ -106,6 +106,38 @@ html, body {
     color: var(--text-secondary);
 }
 
+.status-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sim-status-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.sim-status-badge.running {
+    background: rgba(61, 220, 132, 0.15);
+    color: var(--success);
+}
+
+.sim-status-badge.paused {
+    background: rgba(255, 179, 71, 0.15);
+    color: var(--warning);
+}
+
+.sim-status-badge.complete {
+    background: rgba(74, 158, 255, 0.15);
+    color: var(--accent);
+}
+
 /* -- Toolbar ------------------------------------------------------------ */
 
 .toolbar-brand {

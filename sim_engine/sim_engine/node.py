@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-import time
+from dataclasses import replace
 from typing import Any
 
 import rclpy
@@ -27,6 +27,9 @@ from crucible_msgs.srv import (
     LoadScenario,
     RemoveAgent,
     SaveScenario,
+    SetPose,
+    SetSpeed,
+    SimControl,
 )
 
 from sim_engine.agent import Agent, Pose, Velocity
@@ -88,16 +91,16 @@ class SimEngineNode(Node):
         discover_all_plugins()
 
         # Declare parameters
-        self.declare_parameter("tick_rate_hz", 100)
+        self.declare_parameter("sim_dt", 0.01)  # fixed sim step size (seconds)
         self.declare_parameter("speed_multiplier", 1.0)
         self.declare_parameter("seed", 42)
         self.declare_parameter("config_file", "")
         self.declare_parameter("ground_truth_rate_hz", 50.0)
 
-        self._tick_rate_hz = (
-            self.get_parameter("tick_rate_hz").get_parameter_value().integer_value
+        self._sim_dt: float = (
+            self.get_parameter("sim_dt").get_parameter_value().double_value
         )
-        self._speed_multiplier = (
+        self._speed_multiplier: float = (
             self.get_parameter("speed_multiplier")
             .get_parameter_value()
             .double_value
@@ -114,13 +117,16 @@ class SimEngineNode(Node):
         # Sim state
         self._world = WorldState()
         self._scenario = ScenarioRunner(self._world)
-        self._running = False
+        self._status = "PAUSED"  # RUNNING, PAUSED, COMPLETE
         self._agent_pubs: dict[str, _AgentPublishers] = {}
         self._gt_accumulator: float = 0.0
 
+        # Initial poses for reset (agent_id -> Pose copy)
+        self._initial_poses: dict[str, Pose] = {}
+
         # Sim config dict (for save/load)
         self._sim_cfg: dict[str, Any] = {
-            "tick_rate_hz": self._tick_rate_hz,
+            "sim_dt": self._sim_dt,
             "speed_multiplier": self._speed_multiplier,
             "seed": self._global_seed,
         }
@@ -142,6 +148,15 @@ class SimEngineNode(Node):
         self.create_service(
             SaveScenario, "/sim/save_scenario", self._srv_save_scenario
         )
+        self.create_service(
+            SetPose, "/sim/set_pose", self._srv_set_pose
+        )
+        self.create_service(
+            SimControl, "/sim/sim_control", self._srv_sim_control
+        )
+        self.create_service(
+            SetSpeed, "/sim/set_speed", self._srv_set_speed
+        )
 
         # Load config file if provided
         config_file = (
@@ -150,24 +165,39 @@ class SimEngineNode(Node):
         if config_file:
             self._load_config_file(config_file)
 
-        # Sim loop timer
-        dt = 1.0 / self._tick_rate_hz
-        self._timer = self.create_timer(dt, self._tick)
-        self._running = True
+        # Sim loop timer — period = sim_dt / speed (or uncapped if speed == 0)
+        self._timer = self._create_tick_timer()
 
         self.get_logger().info(
-            f"CRUCIBLE sim engine started: tick_rate={self._tick_rate_hz} Hz, speed={self._speed_multiplier:.1f}x"
+            f"CRUCIBLE sim engine started: sim_dt={self._sim_dt:.4f}s, speed={self._speed_multiplier:.1f}x"
         )
 
     # -- Sim loop ------------------------------------------------------------
 
+    def _create_tick_timer(self):
+        """Create (or recreate) the sim loop timer based on current speed."""
+        if self._speed_multiplier > 0:
+            period = self._sim_dt / self._speed_multiplier
+        else:
+            # Max speed — fire as fast as ROS2 will allow
+            period = 1e-6
+        return self.create_timer(period, self._tick)
+
+    def _rebuild_timer(self) -> None:
+        """Destroy and recreate the tick timer (e.g. after speed change)."""
+        self.destroy_timer(self._timer)
+        self._timer = self._create_tick_timer()
+
     def _tick(self) -> None:
         """Main simulation tick — motion, sensors, ground truth, clock."""
-        if not self._running:
+        if self._status != "RUNNING":
             return
 
-        dt = 1.0 / self._tick_rate_hz
-        sim_dt = dt * self._speed_multiplier
+        self._step_once()
+
+    def _step_once(self) -> None:
+        """Advance the simulation by exactly one sim_dt."""
+        sim_dt = self._sim_dt
 
         # Advance sim time
         self._world.sim_time_ns += int(sim_dt * 1e9)
@@ -320,6 +350,7 @@ class SimEngineNode(Node):
 
             self._world.add_agent(agent)
             self._register_agent(agent)
+            self._initial_poses[request.agent_id] = replace(agent.pose)
 
             response.success = True
             response.message = f"Agent '{request.agent_id}' added"
@@ -334,6 +365,7 @@ class SimEngineNode(Node):
         try:
             self._unregister_agent(request.agent_id)
             self._world.remove_agent(request.agent_id)
+            self._initial_poses.pop(request.agent_id, None)
             response.success = True
             response.message = f"Agent '{request.agent_id}' removed"
         except Exception as e:
@@ -374,6 +406,29 @@ class SimEngineNode(Node):
             response.message = str(e)
         return response
 
+    def _srv_set_pose(
+        self,
+        request: SetPose.Request,
+        response: SetPose.Response,
+    ) -> SetPose.Response:
+        try:
+            agent = self._world.get_agent(request.agent_id)
+            agent.pose.latitude = request.latitude
+            agent.pose.longitude = request.longitude
+            agent.pose.altitude = request.altitude
+            agent.pose.heading = request.heading
+
+            # If sim hasn't started yet, this is an initial condition change
+            if self._world.sim_time_ns == 0:
+                self._initial_poses[request.agent_id] = replace(agent.pose)
+
+            response.success = True
+            response.message = f"Pose updated for '{request.agent_id}'"
+        except Exception as e:
+            response.success = False
+            response.message = str(e)
+        return response
+
     def _srv_load_scenario(
         self,
         request: LoadScenario.Request,
@@ -391,27 +446,28 @@ class SimEngineNode(Node):
             self._world = world
             self._sim_cfg.update(sim_cfg)
 
-            # Update tick rate if changed
-            new_rate = sim_cfg.get("tick_rate_hz", self._tick_rate_hz)
-            if new_rate != self._tick_rate_hz:
-                self._tick_rate_hz = new_rate
-                self.destroy_timer(self._timer)
-                self._timer = self.create_timer(
-                    1.0 / self._tick_rate_hz, self._tick
-                )
+            # Update timing params if changed
+            new_dt = sim_cfg.get("sim_dt", self._sim_dt)
+            new_speed = sim_cfg.get("speed_multiplier", self._speed_multiplier)
+            needs_rebuild = (new_dt != self._sim_dt or new_speed != self._speed_multiplier)
+            self._sim_dt = new_dt
+            self._speed_multiplier = new_speed
+            if needs_rebuild:
+                self._rebuild_timer()
 
-            self._speed_multiplier = sim_cfg.get(
-                "speed_multiplier", self._speed_multiplier
-            )
-
-            # Register all agents
+            # Register all agents and store initial poses
+            self._initial_poses.clear()
             for agent in self._world.get_all_agents():
                 self._register_agent(agent)
+                self._initial_poses[agent.agent_id] = replace(agent.pose)
 
             # Load scenario events
             events = config.get("scenario", {}).get("events", [])
             self._scenario = ScenarioRunner(self._world)
             self._scenario.load_events(events)
+
+            # Pause after load so user can inspect before running
+            self._status = "PAUSED"
 
             response.success = True
             response.message = f"Loaded scenario with {len(self._world.get_all_agents())} agents"
@@ -441,6 +497,80 @@ class SimEngineNode(Node):
             response.message = str(e)
         return response
 
+    def _srv_sim_control(
+        self,
+        request: SimControl.Request,
+        response: SimControl.Response,
+    ) -> SimControl.Response:
+        action = request.action.lower()
+        try:
+            if action == "resume":
+                self._status = "RUNNING"
+                response.success = True
+                response.message = "Simulation running"
+            elif action == "pause":
+                self._status = "PAUSED"
+                response.success = True
+                response.message = "Simulation paused"
+            elif action == "step":
+                if self._status == "RUNNING":
+                    response.success = False
+                    response.message = "Cannot step while running — pause first"
+                else:
+                    self._step_once()
+                    self._status = "PAUSED"
+                    response.success = True
+                    response.message = f"Stepped {self._sim_dt:.4f}s"
+            elif action == "reset":
+                self._status = "PAUSED"
+                self._world.sim_time_ns = 0
+                self._gt_accumulator = 0.0
+                # Restore initial poses and zero velocities
+                for agent in self._world.get_all_agents():
+                    initial = self._initial_poses.get(agent.agent_id)
+                    if initial:
+                        agent.pose = replace(initial)
+                    agent.velocity = Velocity()
+                response.success = True
+                response.message = "Simulation reset to initial conditions"
+            else:
+                response.success = False
+                response.message = f"Unknown action: {action}"
+        except Exception as e:
+            response.success = False
+            response.message = str(e)
+        response.status = self._status
+        return response
+
+    def _srv_set_speed(
+        self,
+        request: SetSpeed.Request,
+        response: SetSpeed.Response,
+    ) -> SetSpeed.Response:
+        try:
+            multiplier = request.speed_multiplier
+            if multiplier < 0:
+                response.success = False
+                response.message = "Speed multiplier must be >= 0"
+                response.effective_multiplier = self._speed_multiplier
+                return response
+
+            self._speed_multiplier = multiplier
+            self._sim_cfg["speed_multiplier"] = multiplier
+            self._rebuild_timer()
+
+            response.success = True
+            if multiplier == 0:
+                response.message = "Speed set to max (uncapped)"
+            else:
+                response.message = f"Speed set to {multiplier:.1f}x"
+            response.effective_multiplier = multiplier
+        except Exception as e:
+            response.success = False
+            response.message = str(e)
+            response.effective_multiplier = self._speed_multiplier
+        return response
+
     # -- Config loading ------------------------------------------------------
 
     def _load_config_file(self, path: str) -> None:
@@ -453,13 +583,16 @@ class SimEngineNode(Node):
             self._world = world
             self._sim_cfg.update(sim_cfg)
 
-            self._tick_rate_hz = sim_cfg.get("tick_rate_hz", self._tick_rate_hz)
+            self._sim_dt = sim_cfg.get("sim_dt", self._sim_dt)
             self._speed_multiplier = sim_cfg.get(
                 "speed_multiplier", self._speed_multiplier
             )
+            self._rebuild_timer()
 
+            self._initial_poses.clear()
             for agent in self._world.get_all_agents():
                 self._register_agent(agent)
+                self._initial_poses[agent.agent_id] = replace(agent.pose)
 
             events = config.get("scenario", {}).get("events", [])
             self._scenario = ScenarioRunner(self._world)
