@@ -27,6 +27,14 @@ const Agents = (() => {
             stack_status: 'STOPPED',
             stack_compose_file: data.stack_compose_file || '',
             stack_env: data.stack_env || {},
+            stack_sys_env: data.stack_sys_env || {
+                AGENT_NUM: true,
+                AGENT_NAME: true,
+                ROS_DOMAIN_ID: true,
+                AGENT_NAMESPACE: true,
+                FLEET_SIZE: true,
+                FLEET_AGENTS: true,
+            },
         };
 
         MapView.addAgent(id, agents[id].lat, agents[id].lon, agents[id].heading);
@@ -255,6 +263,9 @@ const Agents = (() => {
                     <span class="pose-label">Compose</span>
                     <span class="pose-val editable" id="detail-compose" data-field="stack_compose_file" title="${agent.stack_compose_file || 'not set'}">${agent.stack_compose_file || '<em>not set</em>'}</span>
                 </div>
+                <div class="sys-env-toggle" id="sys-env-toggle">System Env <span class="sys-env-arrow" id="sys-env-arrow">&#9654;</span></div>
+                <div class="sys-env-area collapsed" id="sys-env-area"></div>
+                <div class="stack-env-label">User Env</div>
                 <div class="stack-env-area" id="stack-env-area"></div>
                 <div style="margin-top: 8px; display: flex; gap: 4px;">
                     <button class="btn btn-sm btn-accent" id="btn-launch-stack">Launch</button>
@@ -313,8 +324,59 @@ const Agents = (() => {
         // Render sensor configs
         Sensors.renderSensorConfig(agentId, agent.sensors || []);
 
-        // Render stack env vars
+        // System env — collapsible toggle
+        document.getElementById('sys-env-toggle').addEventListener('click', () => {
+            const area = document.getElementById('sys-env-area');
+            const arrow = document.getElementById('sys-env-arrow');
+            area.classList.toggle('collapsed');
+            arrow.innerHTML = area.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+        });
+        _renderSysEnv(agentId);
+
+        // Render user stack env vars
         _renderStackEnv(agentId);
+    }
+
+    function _computeSysEnvValues(agentId) {
+        const agent = agents[agentId];
+        if (!agent) return {};
+        const match = agentId.match(/_(\d+)$/);
+        const agentNum = match ? match[1] : '0';
+        const allIds = Object.keys(agents);
+        return {
+            AGENT_NUM: agentNum,
+            AGENT_NAME: agentId,
+            ROS_DOMAIN_ID: String(agent.domain_id),
+            AGENT_NAMESPACE: agentId,
+            FLEET_SIZE: String(allIds.length),
+            FLEET_AGENTS: allIds.join(','),
+        };
+    }
+
+    function _renderSysEnv(agentId) {
+        const area = document.getElementById('sys-env-area');
+        if (!area) return;
+        const agent = agents[agentId];
+        if (!agent) return;
+        const sysFlags = agent.stack_sys_env || {};
+        const values = _computeSysEnvValues(agentId);
+
+        area.innerHTML = Object.entries(values).map(([key, val]) => {
+            const checked = sysFlags[key] !== false ? 'checked' : '';
+            return `<div class="sys-env-row">
+                <label class="sys-env-check"><input type="checkbox" data-sys-key="${key}" ${checked}></label>
+                <span class="sys-env-key">${key}</span>
+                <span class="sys-env-val">${val}</span>
+            </div>`;
+        }).join('');
+
+        // Checkbox handlers
+        area.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (!agent.stack_sys_env) agent.stack_sys_env = {};
+                agent.stack_sys_env[cb.dataset.sysKey] = cb.checked;
+            });
+        });
     }
 
     function _renderStackEnv(agentId) {
@@ -542,6 +604,9 @@ const Agents = (() => {
                 domain_id: a.domain_id,
                 vehicle_type: a.vehicle_type,
                 vehicle_class: a.vehicle_class,
+                stack_compose_file: a.stack_compose_file,
+                stack_env: { ...(a.stack_env || {}) },
+                stack_sys_env: { ...(a.stack_sys_env || {}) },
             };
         }
         return { agents: copy, lastKnownVersion };
@@ -577,5 +642,6 @@ const Agents = (() => {
         getLastKnownVersion,
         setLastKnownVersion,
         getSerializableState,
+        computeSysEnvValues: _computeSysEnvValues,
     };
 })();

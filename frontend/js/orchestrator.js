@@ -32,13 +32,14 @@ const Orchestrator = (() => {
             return;
         }
 
-        // Merge default env with stored env (stored values take precedence)
-        const env = {
-            AGENT_ID: agentId,
-            ROS_DOMAIN_ID: String(agent.domain_id),
-            AGENT_NAMESPACE: agentId,
-            ...(agent.stack_env || {}),
-        };
+        // Build env: enabled system vars + user env (user takes precedence)
+        const sysValues = Agents.computeSysEnvValues(agentId);
+        const sysFlags = agent.stack_sys_env || {};
+        const env = {};
+        for (const [key, val] of Object.entries(sysValues)) {
+            if (sysFlags[key] !== false) env[key] = val;
+        }
+        Object.assign(env, agent.stack_env || {});
 
         WS.sendOrch({
             cmd: 'launch_stack',

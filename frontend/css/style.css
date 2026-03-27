@@ -1270,6 +1270,86 @@ select.form-input {
     text-align: right;
 }
 
+/* -- System env section ------------------------------------------------- */
+
+.sys-env-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+.sys-env-toggle:hover {
+    color: var(--text-secondary);
+}
+
+.sys-env-arrow {
+    font-size: 8px;
+    transition: transform 0.15s;
+}
+
+.sys-env-area {
+    overflow: hidden;
+    transition: max-height 0.2s ease, opacity 0.2s ease;
+    max-height: 300px;
+    opacity: 1;
+}
+
+.sys-env-area.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.sys-env-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+}
+
+.sys-env-check input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.sys-env-key {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 110px;
+}
+
+.sys-env-val {
+    color: var(--text-secondary);
+    text-align: right;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stack-env-label {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+}
+
 .place-mode-banner {
     position: absolute;
     top: 12px;
