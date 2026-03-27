@@ -400,6 +400,27 @@ html, body {
     padding: 8px 14px;
 }
 
+.sort-select {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 4px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+}
+
+.agent-group-header {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    padding: 8px 12px 4px;
+    margin-top: 4px;
+}
+
 .agent-card {
     padding: 10px 12px;
     background: var(--bg-tertiary);
@@ -1088,6 +1109,11 @@ select.form-input {
 
 #map-container.place-mode {
     cursor: crosshair;
+}
+
+#map-container.rotate-mode,
+#map-container.rotate-mode * {
+    cursor: crosshair !important;
 }
 
 .place-mode-banner {

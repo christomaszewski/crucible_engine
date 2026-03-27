@@ -6,6 +6,7 @@ const Agents = (() => {
     const agents = {};  // agent_id -> { lat, lon, alt, heading, sensors, domain_id, vehicle_type, vehicle_class, stack_status }
     let selectedId = null;
     let lastKnownVersion = 0;  // last state_version received from backend
+    let sortMode = 'id';  // 'id', 'type', 'domain'
 
     function getAll() { return agents; }
     function getSelected() { return selectedId; }
@@ -81,36 +82,78 @@ const Agents = (() => {
         showDetail(agentId);
     }
 
+    function setSortMode(mode) {
+        sortMode = mode;
+        renderList();
+    }
+
+    function _agentCardHtml(id) {
+        const a = agents[id];
+        const selected = id === selectedId ? 'selected' : '';
+        const vtype = (a.vehicle_type || Icons.getTypeFromId(id)).toLowerCase();
+        const sensorBadges = (a.sensors || [])
+            .map(s => `<span class="sensor-badge">${s}</span>`)
+            .join('');
+        const statusClass = (a.stack_status || 'STOPPED').toLowerCase();
+
+        return `
+            <div class="agent-card ${selected}" data-id="${id}">
+                <div class="agent-card-header">
+                    <span class="agent-id">
+                        <span class="agent-type-icon type-${vtype}">${Icons.getSvg(vtype)}</span>
+                        ${id}
+                    </span>
+                    <span class="agent-status ${statusClass}"></span>
+                </div>
+                <div class="agent-meta">
+                    ${a.lat.toFixed(6)}, ${a.lon.toFixed(6)} | ${a.alt.toFixed(1)}m
+                </div>
+                <div class="agent-sensors">${sensorBadges}</div>
+            </div>
+        `;
+    }
+
     function renderList() {
         const list = document.getElementById('agent-list');
         const ids = Object.keys(agents).sort();
         document.getElementById('agent-count').textContent = ids.length;
 
-        list.innerHTML = ids.map(id => {
-            const a = agents[id];
-            const selected = id === selectedId ? 'selected' : '';
-            const vtype = (a.vehicle_type || Icons.getTypeFromId(id)).toLowerCase();
-            const sensorBadges = (a.sensors || [])
-                .map(s => `<span class="sensor-badge">${s}</span>`)
-                .join('');
-            const statusClass = (a.stack_status || 'STOPPED').toLowerCase();
+        let html = '';
 
-            return `
-                <div class="agent-card ${selected}" data-id="${id}">
-                    <div class="agent-card-header">
-                        <span class="agent-id">
-                            <span class="agent-type-icon type-${vtype}">${Icons.getSvg(vtype)}</span>
-                            ${id}
-                        </span>
-                        <span class="agent-status ${statusClass}"></span>
-                    </div>
-                    <div class="agent-meta">
-                        ${a.lat.toFixed(6)}, ${a.lon.toFixed(6)} | ${a.alt.toFixed(1)}m
-                    </div>
-                    <div class="agent-sensors">${sensorBadges}</div>
-                </div>
-            `;
-        }).join('');
+        if (sortMode === 'type') {
+            const typeOrder = ['uav', 'usv', 'ugv', 'uuv', 'uxv'];
+            const groups = {};
+            for (const id of ids) {
+                const vtype = (agents[id].vehicle_type || Icons.getTypeFromId(id)).toLowerCase();
+                (groups[vtype] = groups[vtype] || []).push(id);
+            }
+            for (const t of typeOrder) {
+                if (!groups[t] || groups[t].length === 0) continue;
+                html += `<div class="agent-group-header">${Icons.getLabel(t)}</div>`;
+                html += groups[t].map(_agentCardHtml).join('');
+            }
+            // Any types not in typeOrder
+            for (const t of Object.keys(groups)) {
+                if (typeOrder.includes(t)) continue;
+                html += `<div class="agent-group-header">${t.toUpperCase()}</div>`;
+                html += groups[t].map(_agentCardHtml).join('');
+            }
+        } else if (sortMode === 'domain') {
+            const groups = {};
+            for (const id of ids) {
+                const d = agents[id].domain_id || 0;
+                (groups[d] = groups[d] || []).push(id);
+            }
+            const domains = Object.keys(groups).map(Number).sort((a, b) => a - b);
+            for (const d of domains) {
+                html += `<div class="agent-group-header">Domain ${d}</div>`;
+                html += groups[d].map(_agentCardHtml).join('');
+            }
+        } else {
+            html = ids.map(_agentCardHtml).join('');
+        }
+
+        list.innerHTML = html;
 
         // Click handlers
         list.querySelectorAll('.agent-card').forEach(card => {
@@ -282,6 +325,7 @@ const Agents = (() => {
         refreshDetail: showDetail,
         generateId,
         renderList,
+        setSortMode,
         updateSummary,
         clear,
         getLastKnownVersion,

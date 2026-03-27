@@ -9,6 +9,10 @@ const MapView = (() => {
     let placeMode = false;
     let placeModeCallback = null;
 
+    // Heading rotation state
+    let rotatingAgentId = null;
+    let rotatingPendingHeading = null;
+
     function init() {
         map = L.map('map', {
             center: [38.9072, -77.0369],
@@ -37,6 +41,91 @@ const MapView = (() => {
             if (e.key === 'Escape' && placeMode) {
                 exitPlaceMode();
             }
+        });
+
+        // --- Heading rotation via right-click drag (delegated) ---
+        const mapContainer = document.getElementById('map-container');
+
+        // Suppress context menu on markers only
+        mapContainer.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.map-marker')) {
+                e.preventDefault();
+            }
+        });
+
+        // Right-mousedown on a marker starts rotation
+        mapContainer.addEventListener('mousedown', (e) => {
+            if (e.button !== 2) return;
+            const markerEl = e.target.closest('.map-marker');
+            if (!markerEl) return;
+            const agentId = markerEl.dataset.agent;
+            if (!agentId || !agentMarkers[agentId]) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            rotatingAgentId = agentId;
+            rotatingPendingHeading = null;
+
+            // Disable map and marker dragging during rotation
+            map.dragging.disable();
+            agentMarkers[agentId].dragging.disable();
+            mapContainer.classList.add('rotate-mode');
+        });
+
+        // Mousemove computes heading angle from marker center to cursor
+        document.addEventListener('mousemove', (e) => {
+            if (!rotatingAgentId) return;
+            const marker = agentMarkers[rotatingAgentId];
+            if (!marker) return;
+
+            const mapEl = document.getElementById('map');
+            const mapRect = mapEl.getBoundingClientRect();
+            const markerPt = map.latLngToContainerPoint(marker.getLatLng());
+            const dx = e.clientX - (mapRect.left + markerPt.x);
+            const dy = e.clientY - (mapRect.top + markerPt.y);
+
+            // atan2(dx, -dy): 0 = north (screen up), CW positive
+            let angleDeg = Math.atan2(dx, -dy) * 180 / Math.PI;
+            if (angleDeg < 0) angleDeg += 360;
+            const angleRad = angleDeg * Math.PI / 180;
+
+            // Live visual feedback
+            const el = marker.getElement();
+            if (el) {
+                const shape = el.querySelector('.map-marker-shape');
+                if (shape) shape.style.transform = `rotate(${angleDeg}deg)`;
+            }
+
+            rotatingPendingHeading = angleRad;
+        });
+
+        // Right-mouseup commits the heading
+        document.addEventListener('mouseup', (e) => {
+            if (!rotatingAgentId || e.button !== 2) return;
+
+            const marker = agentMarkers[rotatingAgentId];
+            const agentData = Agents.getAll()[rotatingAgentId] || {};
+            const heading = rotatingPendingHeading != null
+                ? rotatingPendingHeading
+                : (agentData.heading || 0);
+            const pos = marker.getLatLng();
+
+            WS.sendBridge({
+                cmd: 'set_pose',
+                agent_id: rotatingAgentId,
+                lat: pos.lat,
+                lon: pos.lng,
+                alt: agentData.alt || 0,
+                heading: heading,
+            });
+
+            // Re-enable dragging
+            map.dragging.enable();
+            if (marker.dragging) marker.dragging.enable();
+            mapContainer.classList.remove('rotate-mode');
+
+            rotatingAgentId = null;
+            rotatingPendingHeading = null;
         });
     }
 
