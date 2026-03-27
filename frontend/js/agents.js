@@ -278,6 +278,7 @@ const Agents = (() => {
         updateGroundTruth,
         selectAgent,
         updateStackStatus,
+        refreshDetail: showDetail,
         generateId,
         renderList,
         updateSummary,

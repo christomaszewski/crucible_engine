@@ -66,8 +66,20 @@ const App = (() => {
                                 agent_id: id,
                                 ...agentData,
                             });
+                        } else {
+                            // Merge enriched data into existing agent
+                            if (agentData.sensors) existing.sensors = agentData.sensors;
+                            if (agentData.sensor_configs) existing.sensor_configs = agentData.sensor_configs;
+                            if (agentData.vehicle_type) existing.vehicle_type = agentData.vehicle_type;
+                            if (agentData.vehicle_class) existing.vehicle_class = agentData.vehicle_class;
+                            if (agentData.domain_id !== undefined) existing.domain_id = agentData.domain_id;
                         }
                     }
+                    Agents.renderList();
+                    Agents.updateSummary();
+                    // Refresh detail panel if open (sensor configs may have arrived)
+                    const sel = Agents.getSelected();
+                    if (sel && Agents.getAll()[sel]) Agents.refreshDetail(sel);
                     SimControl.updateTime(data.data.sim_time_s || 0);
                     MapView.fitAgents();
                 }
