@@ -25,6 +25,8 @@ const Agents = (() => {
             vehicle_type: data.vehicle_type || '',
             vehicle_class: data.vehicle_class || '',
             stack_status: 'STOPPED',
+            stack_compose_file: data.stack_compose_file || '',
+            stack_env: data.stack_env || {},
         };
 
         MapView.addAgent(id, agents[id].lat, agents[id].lon, agents[id].heading);
@@ -248,12 +250,16 @@ const Agents = (() => {
                 <button class="btn btn-sm" id="btn-add-sensor" style="margin-top: 8px;">+ Add Sensor</button>
             </div>
             <div class="detail-section">
-                <div class="detail-title">Stack</div>
-                <div style="margin-bottom: 8px;">
-                    <span class="sensor-badge">${agent.stack_status}</span>
+                <div class="detail-title">Stack <span class="sensor-badge" style="margin-left: 6px;">${agent.stack_status}</span></div>
+                <div class="pose-row">
+                    <span class="pose-label">Compose</span>
+                    <span class="pose-val editable" id="detail-compose" data-field="stack_compose_file" title="${agent.stack_compose_file || 'not set'}">${agent.stack_compose_file || '<em>not set</em>'}</span>
                 </div>
-                <button class="btn btn-sm btn-accent" id="btn-launch-stack">Launch Stack</button>
-                <button class="btn btn-sm btn-danger" id="btn-stop-stack" style="margin-left: 4px;">Stop Stack</button>
+                <div class="stack-env-area" id="stack-env-area"></div>
+                <div style="margin-top: 8px; display: flex; gap: 4px;">
+                    <button class="btn btn-sm btn-accent" id="btn-launch-stack">Launch</button>
+                    <button class="btn btn-sm btn-danger" id="btn-stop-stack">Stop</button>
+                </div>
             </div>
             <div class="detail-section">
                 <button class="btn btn-sm btn-danger" id="btn-remove-agent">Remove Agent</button>
@@ -306,6 +312,74 @@ const Agents = (() => {
 
         // Render sensor configs
         Sensors.renderSensorConfig(agentId, agent.sensors || []);
+
+        // Render stack env vars
+        _renderStackEnv(agentId);
+    }
+
+    function _renderStackEnv(agentId) {
+        const area = document.getElementById('stack-env-area');
+        if (!area) return;
+        const agent = agents[agentId];
+        if (!agent) return;
+        const env = agent.stack_env || {};
+        const entries = Object.entries(env);
+
+        if (entries.length === 0) {
+            area.innerHTML = '<div style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">No env vars</div>';
+        } else {
+            area.innerHTML = entries.map(([k, v]) =>
+                `<div class="pose-row"><span class="pose-label" style="font-size:10px">${k}</span><span class="pose-val editable" data-env-key="${k}" style="font-size:10px">${v}</span></div>`
+            ).join('');
+        }
+
+        // Add env button
+        const addBtn = document.createElement('button');
+        addBtn.className = 'btn btn-sm';
+        addBtn.style.marginTop = '4px';
+        addBtn.style.fontSize = '10px';
+        addBtn.textContent = '+ Env Var';
+        addBtn.addEventListener('click', () => {
+            const key = prompt('Environment variable name:');
+            if (!key || !key.trim()) return;
+            const val = prompt(`Value for ${key.trim()}:`, '');
+            if (val === null) return;
+            if (!agent.stack_env) agent.stack_env = {};
+            agent.stack_env[key.trim()] = val;
+            _renderStackEnv(agentId);
+        });
+        area.appendChild(addBtn);
+
+        // Click-to-edit env values
+        area.querySelectorAll('.pose-val.editable').forEach(el => {
+            el.addEventListener('click', () => {
+                if (el.querySelector('input')) return;
+                const envKey = el.dataset.envKey;
+                const currentVal = el.textContent;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'pose-inline-input';
+                input.style.width = '80px';
+                input.value = currentVal;
+
+                el.textContent = '';
+                el.appendChild(input);
+                input.focus();
+                input.select();
+
+                const commit = () => {
+                    const newVal = input.value.trim();
+                    if (!agent.stack_env) agent.stack_env = {};
+                    agent.stack_env[envKey] = newVal;
+                    el.textContent = newVal;
+                };
+                input.addEventListener('blur', commit);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                    if (e.key === 'Escape') { el.textContent = currentVal; }
+                });
+            });
+        });
     }
 
     function _startPoseEdit(el, agentId) {
@@ -317,7 +391,36 @@ const Agents = (() => {
         const dvtype = (agent.vehicle_type || Icons.getTypeFromId(agentId)).toLowerCase();
         const isUuv = dvtype === 'uuv';
 
-        // Get raw numeric value for editing
+        // Text fields (compose file path)
+        if (field === 'stack_compose_file') {
+            const rawVal = agent.stack_compose_file || '';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'pose-inline-input';
+            input.style.width = '140px';
+            input.value = rawVal;
+            input.placeholder = './stacks/agent_stack.yml';
+
+            el.textContent = '';
+            el.appendChild(input);
+            input.focus();
+            input.select();
+
+            const commit = () => {
+                const newVal = input.value.trim();
+                agent.stack_compose_file = newVal;
+                el.innerHTML = newVal || '<em>not set</em>';
+                el.title = newVal || 'not set';
+            };
+            input.addEventListener('blur', commit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                if (e.key === 'Escape') { el.innerHTML = agent.stack_compose_file || '<em>not set</em>'; }
+            });
+            return;
+        }
+
+        // Numeric fields (lat, lon, heading, alt)
         let rawVal;
         if (field === 'heading') {
             rawVal = ((agent.heading || 0) * 180 / Math.PI).toFixed(1);

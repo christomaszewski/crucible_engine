@@ -26,19 +26,25 @@ const Orchestrator = (() => {
         const agent = Agents.getAll()[agentId];
         if (!agent) return;
 
-        // For now, use a default compose file path — this would come from
-        // agent config or a user prompt in a full implementation.
-        const composeFile = './stacks/agent_stack.yml';
+        const composeFile = agent.stack_compose_file || './stacks/agent_stack.yml';
+        if (!composeFile) {
+            App.toast(`No compose file set for ${agentId}`, 'error');
+            return;
+        }
+
+        // Merge default env with stored env (stored values take precedence)
+        const env = {
+            AGENT_ID: agentId,
+            ROS_DOMAIN_ID: String(agent.domain_id),
+            AGENT_NAMESPACE: agentId,
+            ...(agent.stack_env || {}),
+        };
 
         WS.sendOrch({
             cmd: 'launch_stack',
             agent_id: agentId,
             compose_file: composeFile,
-            env: {
-                AGENT_ID: agentId,
-                ROS_DOMAIN_ID: String(agent.domain_id),
-                AGENT_NAMESPACE: agentId,
-            },
+            env,
         });
 
         Agents.updateStackStatus(agentId, 'STARTING');

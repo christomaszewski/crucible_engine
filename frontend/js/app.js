@@ -80,6 +80,8 @@ const App = (() => {
                             if (agentData.vehicle_type) existing.vehicle_type = agentData.vehicle_type;
                             if (agentData.vehicle_class) existing.vehicle_class = agentData.vehicle_class;
                             if (agentData.domain_id !== undefined) existing.domain_id = agentData.domain_id;
+                            if (agentData.stack_compose_file !== undefined) existing.stack_compose_file = agentData.stack_compose_file;
+                            if (agentData.stack_env) existing.stack_env = agentData.stack_env;
                             // Update map marker position
                             MapView.updateAgent(id, existing.lat, existing.lon, existing.heading);
                         }

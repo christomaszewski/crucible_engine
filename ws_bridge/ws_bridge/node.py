@@ -366,6 +366,7 @@ class WsBridgeNode(Node):
                 for agent_id, agent_cfg in config.get("agents", {}).items():
                     pose = agent_cfg.get("initial_pose", {})
                     sensors_cfg = agent_cfg.get("sensors", {})
+                    stack_cfg = agent_cfg.get("stack", {})
                     agents[agent_id] = {
                         "lat": pose.get("lat", 0.0),
                         "lon": pose.get("lon", 0.0),
@@ -376,6 +377,8 @@ class WsBridgeNode(Node):
                         "domain_id": agent_cfg.get("domain_id", 0),
                         "vehicle_type": agent_cfg.get("vehicle_type", ""),
                         "vehicle_class": agent_cfg.get("vehicle_class", ""),
+                        "stack_compose_file": stack_cfg.get("compose_file", ""),
+                        "stack_env": stack_cfg.get("env", {}),
                     }
         except Exception as e:
             self.get_logger().error(f"Failed to get state via SaveScenario: {e}")
