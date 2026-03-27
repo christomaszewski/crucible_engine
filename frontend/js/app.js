@@ -69,6 +69,7 @@ const App = (() => {
                         }
                     }
                     SimControl.updateTime(data.data.sim_time_s || 0);
+                    MapView.fitAgents();
                 }
                 Agents.setLastKnownVersion(backendVersion);
             }

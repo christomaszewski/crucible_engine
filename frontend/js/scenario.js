@@ -16,6 +16,14 @@ const Scenario = (() => {
         WS.on('bridge:scenario_saved', (data) => {
             showSaveResult(data.config_yaml);
         });
+
+        // After a successful load, re-fetch state to rebuild the agent list
+        WS.on('bridge:info', (data) => {
+            if (data.success && data.message && data.message.startsWith('Loaded scenario')) {
+                Agents.clear();
+                WS.sendBridge({ cmd: 'get_state' });
+            }
+        });
     }
 
     function showLoad() {
