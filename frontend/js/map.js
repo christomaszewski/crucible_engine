@@ -89,7 +89,7 @@ const MapView = (() => {
 
     function addAgent(agentId, lat, lon, heading = 0) {
         if (agentMarkers[agentId]) {
-            agentMarkers[agentId].setLatLng([lat, lon]);
+            updateAgent(agentId, lat, lon, heading);
             return;
         }
 
