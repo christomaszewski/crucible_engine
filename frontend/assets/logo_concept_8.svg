@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 130" fill="none">
+  <!-- CRUCIBLE — C as pouring crucible, stream forms the underline, clean/minimal -->
+  <defs>
+    <linearGradient id="molten8" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD54F"/>
+      <stop offset="50%" stop-color="#FF9800"/>
+      <stop offset="100%" stop-color="#BF360C"/>
+    </linearGradient>
+    <linearGradient id="stream8" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FF9800"/>
+      <stop offset="40%" stop-color="#E65100"/>
+      <stop offset="100%" stop-color="#BF360C" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow8">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <style>
+    .lt8 { fill: #C8CCD2; font-family: 'Courier New', monospace; font-size: 78px; font-weight: 700; }
+  </style>
+
+  <!-- C as crucible — tilted, pouring -->
+  <g transform="translate(14, 6)">
+    <g transform="rotate(-28, 44, 50)">
+      <path d="M12,18 L5,68 Q5,86 26,86 L62,86 Q83,86 83,68 L76,18"
+            stroke="#9E9E9E" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12,18 L5,10" stroke="#9E9E9E" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M76,18 L83,10" stroke="#AAAAAA" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- Molten fill -->
+      <path d="M12,36 Q44,48 76,28 L74,68 Q74,80 58,80 L30,80 Q14,80 14,68 Z"
+            fill="url(#molten8)" opacity="0.85"/>
+      <ellipse cx="44" cy="56" rx="22" ry="12" fill="#FFD54F" opacity="0.2" filter="url(#glow8)"/>
+    </g>
+
+    <!-- Pour stream — drops down then sweeps right as underline -->
+    <path d="M84,10 C88,30 86,52 88,72 C90,90 98,102 118,108 Q200,118 680,118"
+          stroke="url(#stream8)" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8"/>
+    <!-- Glow on the pour part -->
+    <path d="M84,10 C88,30 86,52 88,72 C90,90 98,102 118,108"
+          stroke="#FF9800" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.1" filter="url(#glow8)"/>
+  </g>
+
+  <!-- RUCIBLE text -->
+  <text x="118" y="92" class="lt8">RUCIBLE</text>
+</svg>

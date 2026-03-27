@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 120" fill="none">
+  <!-- CRUCIBLE — C is a tilted crucible pouring molten contents -->
+  <defs>
+    <linearGradient id="molten5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFCC00"/>
+      <stop offset="40%" stop-color="#FF8800"/>
+      <stop offset="100%" stop-color="#FF4400"/>
+    </linearGradient>
+    <linearGradient id="glow5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFCC00" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FF4400" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blur5">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <style>
+    .letter { fill: #D0D4DA; font-family: 'Courier New', monospace; font-size: 76px; font-weight: 700; }
+  </style>
+
+  <!-- C as tilted crucible pouring to the right -->
+  <g transform="translate(18, 8)">
+    <!-- Crucible body — tilted ~25 degrees, C-shaped opening faces right -->
+    <g transform="rotate(-25, 45, 50)">
+      <!-- Vessel walls -->
+      <path d="M16,18 L8,72 Q8,90 28,90 L62,90 Q82,90 82,72 L74,18"
+            stroke="#888" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Left lip -->
+      <path d="M16,18 L10,10" stroke="#888" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- Right lip (pour spout) -->
+      <path d="M74,18 L80,10" stroke="#888" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- Molten contents inside -->
+      <path d="M14,40 Q45,50 76,30 L74,72 Q74,84 58,84 L32,84 Q16,84 16,72 Z"
+            fill="url(#molten5)" opacity="0.85"/>
+    </g>
+
+    <!-- Pouring stream — flows from spout down and right -->
+    <path d="M82,12 Q88,28 86,48 Q84,68 90,88 Q94,100 102,106"
+          stroke="url(#molten5)" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.9"/>
+    <!-- Glow around stream -->
+    <path d="M82,12 Q88,28 86,48 Q84,68 90,88 Q94,100 102,106"
+          stroke="#FFAA00" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.15" filter="url(#blur5)"/>
+    <!-- Splash/pool at bottom -->
+    <ellipse cx="100" cy="108" rx="14" ry="4" fill="#FF6600" opacity="0.5"/>
+    <ellipse cx="100" cy="108" rx="24" ry="6" fill="#FF8800" opacity="0.12" filter="url(#blur5)"/>
+  </g>
+
+  <!-- RUCIBLE -->
+  <text x="120" y="90" class="letter">RUCIBLE</text>
+
+  <!-- Subtle warm underline -->
+  <line x1="18" y1="108" x2="620" y2="108" stroke="#FF6600" stroke-width="1.5" opacity="0.25"/>
+</svg>
