@@ -25,7 +25,7 @@ const Agents = (() => {
             stack_status: 'STOPPED',
         };
 
-        MapView.addAgent(id, agents[id].lat, agents[id].lon);
+        MapView.addAgent(id, agents[id].lat, agents[id].lon, agents[id].heading);
         renderList();
         updateSummary();
     }

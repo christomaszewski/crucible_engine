@@ -87,14 +87,14 @@ const MapView = (() => {
         });
     }
 
-    function addAgent(agentId, lat, lon) {
+    function addAgent(agentId, lat, lon, heading = 0) {
         if (agentMarkers[agentId]) {
             agentMarkers[agentId].setLatLng([lat, lon]);
             return;
         }
 
         const marker = L.marker([lat, lon], {
-            icon: createAgentIcon(agentId),
+            icon: createAgentIcon(agentId, false, heading),
             draggable: true,
             title: agentId,
         }).addTo(map);

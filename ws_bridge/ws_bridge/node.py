@@ -476,13 +476,19 @@ class WsBridgeNode(Node):
         topic = f"/{agent_id}/sim/ground_truth"
 
         def callback(msg: GroundTruth, aid=agent_id):
+            # Extract yaw (heading) from quaternion
+            q = msg.orientation
+            import math
+            siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+            cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+            heading = math.atan2(siny_cosp, cosy_cosp)
             gt_data = {
                 "type": "ground_truth",
                 "agent_id": aid,
                 "lat": msg.latitude,
                 "lon": msg.longitude,
                 "alt": msg.altitude,
-                "heading": msg.orientation.z,  # simplified; full quat available
+                "heading": heading,
             }
             self._gt_cache[aid] = gt_data
             self.broadcast_sync(gt_data)
