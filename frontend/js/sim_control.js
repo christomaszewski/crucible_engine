@@ -31,6 +31,7 @@ const SimControl = (() => {
 
         // Listen for status updates from backend
         WS.on('bridge:sim_status', (data) => {
+            const wasReset = data.status === 'PAUSED' && data.message && data.message.includes('reset');
             if (data.status) {
                 simStatus = data.status;
             }
@@ -38,6 +39,12 @@ const SimControl = (() => {
                 simSpeed = data.speed;
             }
             updateStatusDisplay();
+
+            // On reset: update time to 0 and refresh agent positions
+            if (wasReset) {
+                updateTime(0);
+                WS.sendBridge({ cmd: 'get_state' });
+            }
         });
 
         updateStatusDisplay();

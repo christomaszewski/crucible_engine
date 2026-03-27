@@ -41,17 +41,20 @@ const MapView = (() => {
     }
 
     // Marker shape SVGs per vehicle type (outline shapes, 40x40 viewBox)
+    // Each shape points "up" (north) at heading=0; CSS rotation handles heading.
+    // Heading indicator: a line from center toward the top of the shape.
+    const headingLine = '<line class="heading-line" x1="20" y1="20" x2="20" y2="4" />';
     const markerShapes = {
         // Diamond — aerial
-        uav: '<polygon points="20,2 38,20 20,38 2,20" />',
+        uav: `<polygon points="20,2 38,20 20,38 2,20" />${headingLine}`,
         // Circle — generic
-        uxv: '<circle cx="20" cy="20" r="17" />',
+        uxv: `<circle cx="20" cy="20" r="17" />${headingLine}`,
         // Pentagon — surface vessel
-        usv: '<polygon points="20,2 37,14 31,36 9,36 3,14" />',
+        usv: `<polygon points="20,2 37,14 31,36 9,36 3,14" />${headingLine}`,
         // Square — ground vehicle
-        ugv: '<rect x="4" y="4" width="32" height="32" rx="3" />',
-        // Inverted triangle — underwater
-        uuv: '<polygon points="4,6 36,6 20,38" />',
+        ugv: `<rect x="4" y="4" width="32" height="32" rx="3" />${headingLine}`,
+        // Triangle — underwater (point = bow, points north at heading 0)
+        uuv: `<polygon points="20,2 36,34 4,34" />${headingLine}`,
     };
 
     function _headingToDeg(radians) {
