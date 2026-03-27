@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120" fill="none">
+  <!-- CRUCIBLE logo — the U is a crucible vessel with molten glow -->
+  <style>
+    .letter { fill: #E0E0E0; font-family: 'Courier New', monospace; font-size: 80px; font-weight: 700; letter-spacing: 2px; }
+    .accent { fill: #4FC3F7; }
+  </style>
+
+  <!-- C-R -->
+  <text x="20" y="88" class="letter">CR</text>
+
+  <!-- U as crucible vessel -->
+  <g transform="translate(138, 12)">
+    <!-- Vessel body — wide-mouth crucible shape -->
+    <path d="M8,20 L4,68 Q4,82 20,82 L48,82 Q64,82 64,68 L60,20"
+          stroke="#E0E0E0" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Pouring lip on right -->
+    <path d="M60,20 L66,14" stroke="#E0E0E0" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- Lip on left -->
+    <path d="M8,20 L2,14" stroke="#E0E0E0" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- Molten contents -->
+    <path d="M10,42 Q34,52 58,42 L56,68 Q56,76 44,76 L24,76 Q12,76 12,68 Z"
+          fill="#4FC3F7" opacity="0.7"/>
+    <!-- Glow -->
+    <ellipse cx="34" cy="58" rx="18" ry="10" fill="#4FC3F7" opacity="0.25"/>
+  </g>
+
+  <!-- CIBLE -->
+  <text x="210" y="88" class="letter">CIBLE</text>
+
+  <!-- Subtle underline accent -->
+  <line x1="20" y1="100" x2="530" y2="100" stroke="#4FC3F7" stroke-width="2" opacity="0.4"/>
+</svg>

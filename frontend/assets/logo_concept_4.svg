@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- CRUCIBLE — square icon/favicon version, crucible with agents inside -->
+
+  <!-- Background -->
+  <rect width="200" height="200" rx="24" fill="#1A1D23"/>
+
+  <!-- Crucible vessel -->
+  <path d="M40,60 L30,150 Q30,170 55,170 L145,170 Q170,170 170,150 L160,60"
+        stroke="#4FC3F7" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Left handle -->
+  <path d="M40,60 L30,48" stroke="#4FC3F7" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- Right handle -->
+  <path d="M160,60 L170,48" stroke="#4FC3F7" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+  <!-- Molten surface -->
+  <path d="M42,90 Q100,108 158,90 L152,150 Q152,164 140,164 L60,164 Q48,164 48,150 Z"
+        fill="#4FC3F7" opacity="0.2"/>
+
+  <!-- Agent dots floating in the crucible — representing multi-agent -->
+  <circle cx="75" cy="120" r="8" fill="#4FC3F7" opacity="0.9"/>
+  <circle cx="125" cy="115" r="8" fill="#4FC3F7" opacity="0.9"/>
+  <circle cx="100" cy="140" r="8" fill="#4FC3F7" opacity="0.9"/>
+
+  <!-- Subtle connection lines between agents -->
+  <line x1="75" y1="120" x2="125" y2="115" stroke="#4FC3F7" stroke-width="1" opacity="0.3"/>
+  <line x1="75" y1="120" x2="100" y2="140" stroke="#4FC3F7" stroke-width="1" opacity="0.3"/>
+  <line x1="125" y1="115" x2="100" y2="140" stroke="#4FC3F7" stroke-width="1" opacity="0.3"/>
+
+  <!-- Heat/emanation lines -->
+  <path d="M70,52 Q67,38 70,24" stroke="#4FC3F7" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round"/>
+  <path d="M100,48 Q97,32 100,18" stroke="#4FC3F7" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+  <path d="M130,52 Q133,38 130,24" stroke="#4FC3F7" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round"/>
+</svg>
