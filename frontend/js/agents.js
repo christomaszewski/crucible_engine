@@ -361,7 +361,7 @@ const Agents = (() => {
         const sysFlags = agent.stack_sys_env || {};
         const values = _computeSysEnvValues(agentId);
 
-        area.innerHTML = Object.entries(values).map(([key, val]) => {
+        area.innerHTML = Object.entries(values).sort(([a], [b]) => a.localeCompare(b)).map(([key, val]) => {
             const checked = sysFlags[key] !== false ? 'checked' : '';
             return `<div class="sys-env-row">
                 <label class="sys-env-check"><input type="checkbox" data-sys-key="${key}" ${checked}></label>
