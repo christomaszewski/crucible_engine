@@ -35,6 +35,7 @@ const Agents = (() => {
                 FLEET_SIZE: true,
                 ROS_DOMAIN_ID: true,
                 SIM_NET: true,
+                STACK_DIR: true,
             },
             stack_sys_env_remap: data.stack_sys_env_remap || {},
         };
@@ -378,6 +379,11 @@ const Agents = (() => {
         const match = agentId.match(/_(\d+)$/);
         const agentIdNum = match ? String(parseInt(match[1], 10)) : '0';
         const allIds = Object.keys(agents);
+        // Compute STACK_DIR: host path of the compose file's directory
+        const composePath = agent.stack_compose_file || '';
+        const composeDir = composePath ? composePath.replace(/\/[^/]+$/, '') : '';
+        const stackDir = (typeof Orchestrator !== 'undefined' && Orchestrator.resolveHostPath)
+            ? Orchestrator.resolveHostPath(composeDir) : composeDir;
         return {
             AGENT_ID: agentIdNum,
             AGENT_NAME: agentId,
@@ -386,6 +392,7 @@ const Agents = (() => {
             FLEET_SIZE: String(allIds.length),
             ROS_DOMAIN_ID: agentIdNum,
             SIM_NET: 'crucible_sim_net',
+            STACK_DIR: stackDir,
         };
     }
 

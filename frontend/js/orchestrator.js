@@ -3,7 +3,15 @@
  */
 
 const Orchestrator = (() => {
+    let stacksHostPath = '';
+    let stacksContainerPath = '/opt/stacks';
+
     function init() {
+        WS.on('orch:orch_config', (data) => {
+            stacksHostPath = data.stacks_host_path || '';
+            stacksContainerPath = data.stacks_container_path || '/opt/stacks';
+        });
+
         WS.on('orch:stack_update', (data) => {
             Agents.updateStackStatus(data.agent_name, data.status, data.services);
             if (data.status === 'RUNNING') {
@@ -89,9 +97,19 @@ const Orchestrator = (() => {
         App.toast('Stopping all stacks...', 'info');
     }
 
+    function resolveHostPath(containerPath) {
+        if (!stacksHostPath || !containerPath) return '';
+        if (containerPath.startsWith(stacksContainerPath)) {
+            return stacksHostPath + containerPath.slice(stacksContainerPath.length);
+        }
+        return containerPath;
+    }
+
+    function getStacksHostPath() { return stacksHostPath; }
+
     function refreshStatus() {
         WS.sendOrch({ cmd: 'get_stack_status' });
     }
 
-    return { init, launchStack, stopStack, stopAllStacks, refreshStatus };
+    return { init, launchStack, stopStack, stopAllStacks, refreshStatus, resolveHostPath, getStacksHostPath };
 })();
