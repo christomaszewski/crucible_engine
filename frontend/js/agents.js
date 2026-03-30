@@ -28,7 +28,7 @@ const Agents = (() => {
             stack_compose_file: data.stack_compose_file || '',
             stack_env: data.stack_env || {},
             stack_sys_env: data.stack_sys_env || {
-                AGENT_NUM: true,
+                AGENT_ID: true,
                 AGENT_NAME: true,
                 ROS_DOMAIN_ID: true,
                 AGENT_NAMESPACE: true,
@@ -341,10 +341,10 @@ const Agents = (() => {
         const agent = agents[agentId];
         if (!agent) return {};
         const match = agentId.match(/_(\d+)$/);
-        const agentNum = match ? match[1] : '0';
+        const agentId = match ? String(parseInt(match[1], 10)) : '0';
         const allIds = Object.keys(agents);
         return {
-            AGENT_NUM: agentNum,
+            AGENT_ID: agentId,
             AGENT_NAME: agentId,
             ROS_DOMAIN_ID: String(agent.domain_id),
             AGENT_NAMESPACE: agentId,
