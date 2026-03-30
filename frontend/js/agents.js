@@ -341,10 +341,10 @@ const Agents = (() => {
         const agent = agents[agentId];
         if (!agent) return {};
         const match = agentId.match(/_(\d+)$/);
-        const agentId = match ? String(parseInt(match[1], 10)) : '0';
+        const agentIdNum = match ? String(parseInt(match[1], 10)) : '0';
         const allIds = Object.keys(agents);
         return {
-            AGENT_ID: agentId,
+            AGENT_ID: agentIdNum,
             AGENT_NAME: agentId,
             ROS_DOMAIN_ID: String(agent.domain_id),
             AGENT_NAMESPACE: agentId,
