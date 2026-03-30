@@ -285,6 +285,7 @@ const Agents = (() => {
             MapView.selectAgent(null);
             hideDetail();
             renderList();
+            if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
         });
 
         // Click-to-edit on pose values (sensor config style)

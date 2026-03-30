@@ -127,18 +127,18 @@
             <div class="adjust-mode-banner" id="adjust-banner"></div>
 
             <div class="map-overlay">
-                <button class="btn btn-sm" id="btn-fit-agents" title="Fit all agents">&#9635;</button>
+                <div class="map-overlay-top">
+                    <div class="map-filter" id="map-filter">
+                        <label class="filter-item"><input type="checkbox" data-type="uav" checked><span class="filter-swatch" style="background:var(--color-uav)"></span>Air</label>
+                        <label class="filter-item"><input type="checkbox" data-type="usv" checked><span class="filter-swatch" style="background:var(--color-usv)"></span>Surface</label>
+                        <label class="filter-item"><input type="checkbox" data-type="ugv" checked><span class="filter-swatch" style="background:var(--color-ugv)"></span>Ground</label>
+                        <label class="filter-item"><input type="checkbox" data-type="uuv" checked><span class="filter-swatch" style="background:var(--color-uuv)"></span>Underwater</label>
+                        <label class="filter-item"><input type="checkbox" data-type="uxv" checked><span class="filter-swatch" style="background:var(--color-uxv)"></span>Other</label>
+                    </div>
+                    <button class="btn btn-sm" id="btn-fit-agents" title="Fit all agents">&#9635;</button>
+                </div>
+                <div class="hotkey-overlay" id="hotkey-overlay"></div>
             </div>
-
-            <div class="map-filter" id="map-filter">
-                <label class="filter-item"><input type="checkbox" data-type="uav" checked><span class="filter-swatch" style="background:var(--color-uav)"></span>Air</label>
-                <label class="filter-item"><input type="checkbox" data-type="usv" checked><span class="filter-swatch" style="background:var(--color-usv)"></span>Surface</label>
-                <label class="filter-item"><input type="checkbox" data-type="ugv" checked><span class="filter-swatch" style="background:var(--color-ugv)"></span>Ground</label>
-                <label class="filter-item"><input type="checkbox" data-type="uuv" checked><span class="filter-swatch" style="background:var(--color-uuv)"></span>Underwater</label>
-                <label class="filter-item"><input type="checkbox" data-type="uxv" checked><span class="filter-swatch" style="background:var(--color-uxv)"></span>Other</label>
-            </div>
-
-            <div class="hotkey-overlay" id="hotkey-overlay"></div>
             <div id="accuracy-panel"></div>
         </main>
 
