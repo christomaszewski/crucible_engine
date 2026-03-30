@@ -26,6 +26,11 @@ const Orchestrator = (() => {
                 Agents.updateStackStatus(agentId, info.status, info.services);
             }
         });
+
+        // Request current stack status on connect/reconnect
+        WS.on('orch:connected', () => {
+            refreshStatus();
+        });
     }
 
     function launchStack(agentId) {
