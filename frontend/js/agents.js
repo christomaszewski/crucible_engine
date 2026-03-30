@@ -256,7 +256,8 @@ const Agents = (() => {
                 <button class="btn btn-sm" id="btn-add-sensor" style="margin-top: 8px;">+ Add Sensor</button>
             </div>
             <div class="detail-section">
-                <div class="detail-title">Stack <span class="sensor-badge" style="margin-left: 6px;">${agent.stack_status}</span></div>
+                <div class="detail-title">Stack <span class="sensor-badge stack-badge-${(agent.stack_status || 'STOPPED').toLowerCase()}" style="margin-left: 6px;">${agent.stack_status}</span></div>
+                <div id="stack-services-area"></div>
                 <div class="pose-row">
                     <span class="pose-label">Compose</span>
                     <span class="pose-val editable" id="detail-compose" data-field="stack_compose_file" title="${agent.stack_compose_file || 'not set'}">${agent.stack_compose_file || '<em>not set</em>'}</span>
@@ -323,6 +324,9 @@ const Agents = (() => {
         // Render sensor configs
         Sensors.renderSensorConfig(agentId, agent.sensors || []);
 
+        // Render stack service status
+        _renderStackServices(agentId);
+
         // System env — collapsible toggle
         document.getElementById('sys-env-toggle').addEventListener('click', () => {
             const area = document.getElementById('sys-env-area');
@@ -334,6 +338,29 @@ const Agents = (() => {
 
         // Render user stack env vars
         _renderStackEnv(agentId);
+    }
+
+    function _renderStackServices(agentId) {
+        const area = document.getElementById('stack-services-area');
+        if (!area) return;
+        const agent = agents[agentId];
+        if (!agent) return;
+        const services = agent.stack_services || {};
+        const entries = Object.entries(services).sort(([a], [b]) => a.localeCompare(b));
+        if (entries.length === 0) {
+            area.innerHTML = '';
+            return;
+        }
+        area.innerHTML = entries.map(([name, state]) => {
+            const stateClass = state === 'running' ? 'svc-running'
+                : state === 'exited' || state === 'dead' ? 'svc-down'
+                : 'svc-other';
+            return `<div class="svc-row">
+                <span class="svc-indicator ${stateClass}"></span>
+                <span class="svc-name">${name}</span>
+                <span class="svc-state">${state}</span>
+            </div>`;
+        }).join('');
     }
 
     function _computeSysEnvValues(agentId) {
@@ -633,9 +660,10 @@ const Agents = (() => {
             `${ids.length} agent${ids.length !== 1 ? 's' : ''} | ${totalSensors} sensor${totalSensors !== 1 ? 's' : ''}`;
     }
 
-    function updateStackStatus(agentId, status) {
+    function updateStackStatus(agentId, status, services) {
         if (agents[agentId]) {
             agents[agentId].stack_status = status;
+            if (services !== undefined) agents[agentId].stack_services = services;
             renderList();
             if (selectedId === agentId) showDetail(agentId);
         }

@@ -5,9 +5,11 @@
 const Orchestrator = (() => {
     function init() {
         WS.on('orch:stack_update', (data) => {
-            Agents.updateStackStatus(data.agent_name, data.status);
+            Agents.updateStackStatus(data.agent_name, data.status, data.services);
             if (data.status === 'RUNNING') {
                 App.toast(`Stack for ${data.agent_name} is running`, 'success');
+            } else if (data.status === 'DEGRADED') {
+                App.toast(`Stack for ${data.agent_name} degraded — services down`, 'warning');
             } else if (data.status === 'ERROR') {
                 App.toast(`Stack error for ${data.agent_name}: ${data.error || 'unknown'}`, 'error');
             } else if (data.status === 'STOPPED') {
@@ -17,7 +19,7 @@ const Orchestrator = (() => {
 
         WS.on('orch:stack_status', (data) => {
             for (const [agentId, info] of Object.entries(data.stacks || {})) {
-                Agents.updateStackStatus(agentId, info.status);
+                Agents.updateStackStatus(agentId, info.status, info.services);
             }
         });
     }

@@ -516,12 +516,20 @@ html, body {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--success);
+    background: var(--text-muted);
 }
 
 .agent-status.stopped { background: var(--text-muted); }
-.agent-status.starting { background: var(--warning); }
+.agent-status.starting { background: var(--warning); animation: pulse-status 1s ease-in-out infinite; }
+.agent-status.running { background: var(--success); }
+.agent-status.stopping { background: var(--warning); animation: pulse-status 1s ease-in-out infinite; }
+.agent-status.degraded { background: var(--warning); }
 .agent-status.error { background: var(--danger); }
+
+@keyframes pulse-status {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
 
 .agent-meta {
     font-family: var(--font-mono);
@@ -1385,6 +1393,49 @@ select.form-input {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* -- Stack service status rows ------------------------------------------ */
+
+.svc-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+}
+
+.svc-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.svc-indicator.svc-running { background: var(--success); }
+.svc-indicator.svc-down { background: var(--danger); }
+.svc-indicator.svc-other { background: var(--warning); }
+
+.svc-name {
+    color: var(--text-primary);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.svc-state {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* Stack status badge colors in detail panel */
+.stack-badge-stopped { background: var(--bg-tertiary); color: var(--text-muted); }
+.stack-badge-starting { background: var(--warning); color: #000; }
+.stack-badge-running { background: var(--success); color: #000; }
+.stack-badge-degraded { background: var(--warning); color: #000; }
+.stack-badge-stopping { background: var(--warning); color: #000; }
+.stack-badge-error { background: var(--danger); color: #fff; }
 
 .stack-env-label {
     margin-top: 8px;
