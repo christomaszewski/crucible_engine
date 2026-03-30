@@ -9,7 +9,11 @@ const Orchestrator = (() => {
             if (data.status === 'RUNNING') {
                 App.toast(`Stack for ${data.agent_name} is running`, 'success');
             } else if (data.status === 'DEGRADED') {
-                App.toast(`Stack for ${data.agent_name} degraded — services down`, 'warning');
+                const down = Object.entries(data.services || {})
+                    .filter(([, s]) => s !== 'running')
+                    .map(([name]) => name);
+                const svcList = down.length ? down.join(', ') : 'unknown';
+                App.toast(`${data.agent_name}: ${svcList} stopped unexpectedly`, 'warning');
             } else if (data.status === 'ERROR') {
                 App.toast(`Stack error for ${data.agent_name}: ${data.error || 'unknown'}`, 'error');
             } else if (data.status === 'STOPPED') {

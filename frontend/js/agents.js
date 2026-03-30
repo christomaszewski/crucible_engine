@@ -205,6 +205,15 @@ const Agents = (() => {
         });
     }
 
+    function _stackStatusTooltip(agent) {
+        const services = agent.stack_services || {};
+        const entries = Object.entries(services);
+        if (entries.length === 0) return agent.stack_status || '';
+        const down = entries.filter(([, s]) => s !== 'running');
+        if (down.length === 0) return `All ${entries.length} services running`;
+        return down.map(([name, state]) => `${name}: ${state}`).join('\n');
+    }
+
     function showDetail(agentId) {
         const panel = document.getElementById('detail-panel');
         const agent = agents[agentId];
@@ -256,7 +265,7 @@ const Agents = (() => {
                 <button class="btn btn-sm" id="btn-add-sensor" style="margin-top: 8px;">+ Add Sensor</button>
             </div>
             <div class="detail-section">
-                <div class="detail-title">Stack <span class="sensor-badge stack-badge-${(agent.stack_status || 'STOPPED').toLowerCase()}" style="margin-left: 6px;">${agent.stack_status}</span></div>
+                <div class="detail-title">Stack <span class="sensor-badge stack-badge-${(agent.stack_status || 'STOPPED').toLowerCase()}" style="margin-left: 6px; cursor: default;" title="${_stackStatusTooltip(agent)}">${agent.stack_status}</span></div>
                 <div id="stack-services-area"></div>
                 <div class="pose-row">
                     <span class="pose-label">Compose</span>
