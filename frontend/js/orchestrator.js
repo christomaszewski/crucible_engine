@@ -32,12 +32,16 @@ const Orchestrator = (() => {
             return;
         }
 
-        // Build env: enabled system vars + user env (user takes precedence)
+        // Build env: enabled system vars (with optional remapping) + user env
         const sysValues = Agents.computeSysEnvValues(agentId);
         const sysFlags = agent.stack_sys_env || {};
+        const remaps = agent.stack_sys_env_remap || {};
         const env = {};
         for (const [key, val] of Object.entries(sysValues)) {
-            if (sysFlags[key] !== false) env[key] = val;
+            if (sysFlags[key] !== false) {
+                const emitKey = remaps[key] || key;
+                env[emitKey] = val;
+            }
         }
         Object.assign(env, agent.stack_env || {});
 

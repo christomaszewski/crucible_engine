@@ -35,6 +35,7 @@ const Agents = (() => {
                 FLEET_SIZE: true,
                 FLEET_AGENTS: true,
             },
+            stack_sys_env_remap: data.stack_sys_env_remap || {},
         };
 
         MapView.addAgent(id, agents[id].lat, agents[id].lon, agents[id].heading);
@@ -360,13 +361,17 @@ const Agents = (() => {
         const agent = agents[agentId];
         if (!agent) return;
         const sysFlags = agent.stack_sys_env || {};
+        const remaps = agent.stack_sys_env_remap || {};
         const values = _computeSysEnvValues(agentId);
 
         area.innerHTML = Object.entries(values).sort(([a], [b]) => a.localeCompare(b)).map(([key, val]) => {
             const checked = sysFlags[key] !== false ? 'checked' : '';
+            const remap = remaps[key] || '';
+            const remapClass = remap ? 'sys-env-remap active' : 'sys-env-remap';
             return `<div class="sys-env-row">
                 <label class="sys-env-check"><input type="checkbox" data-sys-key="${key}" ${checked}></label>
                 <span class="sys-env-key">${key}</span>
+                <span class="${remapClass}" data-sys-key="${key}" title="Click to remap variable name">${remap ? '&rarr; ' + remap : '&rarr;'}</span>
                 <span class="sys-env-val">${val}</span>
             </div>`;
         }).join('');
@@ -377,6 +382,54 @@ const Agents = (() => {
                 if (!agent.stack_sys_env) agent.stack_sys_env = {};
                 agent.stack_sys_env[cb.dataset.sysKey] = cb.checked;
             });
+        });
+
+        // Remap click-to-edit handlers
+        area.querySelectorAll('.sys-env-remap').forEach(el => {
+            el.addEventListener('click', () => _startRemapEdit(el, agent));
+        });
+    }
+
+    function _startRemapEdit(el, agent) {
+        if (el.querySelector('input')) return;
+        const key = el.dataset.sysKey;
+        if (!agent.stack_sys_env_remap) agent.stack_sys_env_remap = {};
+        const currentVal = agent.stack_sys_env_remap[key] || '';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'pose-inline-input sys-env-remap-input';
+        input.value = currentVal;
+        input.placeholder = key;
+
+        el.textContent = '';
+        const arrow = document.createElement('span');
+        arrow.textContent = '\u2192 ';
+        arrow.style.opacity = '0.5';
+        el.appendChild(arrow);
+        el.appendChild(input);
+        input.focus();
+        input.select();
+
+        const commit = () => {
+            const newVal = input.value.trim().toUpperCase();
+            if (newVal && newVal !== key) {
+                agent.stack_sys_env_remap[key] = newVal;
+                el.className = 'sys-env-remap active';
+            } else {
+                delete agent.stack_sys_env_remap[key];
+                el.className = 'sys-env-remap';
+            }
+            el.innerHTML = agent.stack_sys_env_remap[key]
+                ? '&rarr; ' + agent.stack_sys_env_remap[key]
+                : '&rarr;';
+        };
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            if (e.key === 'Escape') {
+                el.innerHTML = currentVal ? '&rarr; ' + currentVal : '&rarr;';
+            }
         });
     }
 
@@ -608,6 +661,7 @@ const Agents = (() => {
                 stack_compose_file: a.stack_compose_file,
                 stack_env: { ...(a.stack_env || {}) },
                 stack_sys_env: { ...(a.stack_sys_env || {}) },
+                stack_sys_env_remap: { ...(a.stack_sys_env_remap || {}) },
             };
         }
         return { agents: copy, lastKnownVersion };

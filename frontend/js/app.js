@@ -83,6 +83,7 @@ const App = (() => {
                             if (agentData.stack_compose_file !== undefined) existing.stack_compose_file = agentData.stack_compose_file;
                             if (agentData.stack_env) existing.stack_env = agentData.stack_env;
                             if (agentData.stack_sys_env) existing.stack_sys_env = agentData.stack_sys_env;
+                            if (agentData.stack_sys_env_remap) existing.stack_sys_env_remap = agentData.stack_sys_env_remap;
                             // Update map marker position
                             MapView.updateAgent(id, existing.lat, existing.lon, existing.heading);
                         }

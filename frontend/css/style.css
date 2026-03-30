@@ -1347,6 +1347,32 @@ select.form-input {
     min-width: 110px;
 }
 
+.sys-env-remap {
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    min-width: 80px;
+    font-size: 10px;
+    opacity: 0.35;
+    transition: opacity var(--transition), color var(--transition);
+}
+
+.sys-env-remap.active {
+    opacity: 1;
+    color: var(--warning);
+}
+
+.sys-env-remap:hover {
+    opacity: 1;
+    color: var(--accent);
+}
+
+.sys-env-remap-input {
+    width: 64px !important;
+    font-size: 10px !important;
+    text-transform: uppercase;
+}
+
 .sys-env-val {
     color: var(--text-secondary);
     text-align: right;
