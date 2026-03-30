@@ -57,7 +57,7 @@ html, body {
 
 #app {
     display: grid;
-    grid-template-columns: 290px 1fr;
+    grid-template-columns: 305px 1fr;
     grid-template-rows: 48px 1fr 32px;
     height: 100vh;
     gap: 0;

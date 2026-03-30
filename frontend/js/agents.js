@@ -31,7 +31,7 @@ const Agents = (() => {
                 AGENT_ID: true,
                 AGENT_NAME: true,
                 AGENT_NS: true,
-                FLEET_NAMES: true,
+                FLEET_IDS: true,
                 FLEET_SIZE: true,
                 ROS_DOMAIN_ID: true,
                 SIM_NET: true,
@@ -350,7 +350,7 @@ const Agents = (() => {
             AGENT_ID: agentIdNum,
             AGENT_NAME: agentId,
             AGENT_NS: agentId,
-            FLEET_NAMES: allIds.join(','),
+            FLEET_IDS: allIds.map(id => { const m = id.match(/_(\d+)$/); return m ? String(parseInt(m[1], 10)) : '0'; }).join(','),
             FLEET_SIZE: String(allIds.length),
             ROS_DOMAIN_ID: String(agent.domain_id),
             SIM_NET: 'crucible_sim_net',
@@ -560,34 +560,34 @@ const Agents = (() => {
         input.select();
 
         const commit = () => {
+            // Remove input first so _updateDetailValues can write to the element
+            if (input.parentNode) input.remove();
+
             const newVal = parseFloat(input.value);
-            if (isNaN(newVal)) {
-                _updateDetailValues(agentId);
-                return;
+            if (!isNaN(newVal)) {
+                if (field === 'lat') agent.lat = newVal;
+                else if (field === 'lon') agent.lon = newVal;
+                else if (field === 'heading') agent.heading = newVal * Math.PI / 180;
+                else if (field === 'alt') agent.alt = isUuv ? -Math.abs(newVal) : Math.max(0, newVal);
+
+                WS.sendBridge({
+                    cmd: 'set_pose',
+                    agent_name: agentId,
+                    lat: agent.lat,
+                    lon: agent.lon,
+                    alt: agent.alt,
+                    heading: agent.heading,
+                });
+                MapView.updateAgent(agentId, agent.lat, agent.lon, agent.heading);
+                renderList();
             }
-
-            if (field === 'lat') agent.lat = newVal;
-            else if (field === 'lon') agent.lon = newVal;
-            else if (field === 'heading') agent.heading = newVal * Math.PI / 180;
-            else if (field === 'alt') agent.alt = isUuv ? -Math.abs(newVal) : Math.max(0, newVal);
-
-            WS.sendBridge({
-                cmd: 'set_pose',
-                agent_name: agentId,
-                lat: agent.lat,
-                lon: agent.lon,
-                alt: agent.alt,
-                heading: agent.heading,
-            });
-            MapView.updateAgent(agentId, agent.lat, agent.lon, agent.heading);
             _updateDetailValues(agentId);
-            renderList();
         };
 
         input.addEventListener('blur', commit);
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-            if (e.key === 'Escape') { _updateDetailValues(agentId); }
+            if (e.key === 'Escape') { input.remove(); _updateDetailValues(agentId); }
         });
     }
 
