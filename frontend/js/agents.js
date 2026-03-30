@@ -232,10 +232,6 @@ const Agents = (() => {
                     <span class="pose-val">${Icons.getLabel(dvtype)}${agent.vehicle_class ? ' / ' + agent.vehicle_class : ''}</span>
                 </div>
                 <div class="pose-row">
-                    <span class="pose-label">DDS Domain</span>
-                    <span class="pose-val">${agent.domain_id}</span>
-                </div>
-                <div class="pose-row">
                     <span class="pose-label">Latitude</span>
                     <span class="${editClass}" id="detail-lat" data-field="lat">${agent.lat.toFixed(6)}</span>
                 </div>
@@ -352,7 +348,7 @@ const Agents = (() => {
             AGENT_NS: agentId,
             FLEET_IDS: allIds.map(id => { const m = id.match(/_(\d+)$/); return m ? String(parseInt(m[1], 10)) : '0'; }).join(','),
             FLEET_SIZE: String(allIds.length),
-            ROS_DOMAIN_ID: String(agent.domain_id),
+            ROS_DOMAIN_ID: agentIdNum,
             SIM_NET: 'crucible_sim_net',
         };
     }
@@ -500,6 +496,18 @@ const Agents = (() => {
         });
     }
 
+    function _tabToEditable(el, agentId, reverse) {
+        const panel = document.getElementById('detail-panel');
+        const editables = Array.from(panel.querySelectorAll('.pose-val.editable'));
+        const idx = editables.indexOf(el);
+        if (idx === -1) return;
+        const next = editables[idx + (reverse ? -1 : 1)];
+        if (next) {
+            // Use setTimeout so the current blur completes before opening next
+            setTimeout(() => _startPoseEdit(next, agentId), 0);
+        }
+    }
+
     function _startPoseEdit(el, agentId) {
         if (el.querySelector('input')) return;
         const field = el.dataset.field;
@@ -532,8 +540,9 @@ const Agents = (() => {
             };
             input.addEventListener('blur', commit);
             input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-                if (e.key === 'Escape') { el.innerHTML = agent.stack_compose_file || '<em>not set</em>'; }
+                if (e.key === 'Tab') { e.preventDefault(); input.blur(); _tabToEditable(el, agentId, e.shiftKey); }
+                else if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                else if (e.key === 'Escape') { el.innerHTML = agent.stack_compose_file || '<em>not set</em>'; }
             });
             return;
         }
@@ -586,8 +595,9 @@ const Agents = (() => {
 
         input.addEventListener('blur', commit);
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-            if (e.key === 'Escape') { input.remove(); _updateDetailValues(agentId); }
+            if (e.key === 'Tab') { e.preventDefault(); input.blur(); _tabToEditable(el, agentId, e.shiftKey); }
+            else if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            else if (e.key === 'Escape') { input.remove(); _updateDetailValues(agentId); }
         });
     }
 
