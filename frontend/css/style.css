@@ -285,6 +285,74 @@ html, body {
     background: var(--danger-dim);
 }
 
+.btn-accent-subtle {
+    color: var(--text-secondary);
+    border-color: var(--border);
+}
+
+.btn-accent-subtle:hover {
+    color: var(--success);
+    border-color: var(--success);
+    background: rgba(61, 220, 132, 0.1);
+}
+
+/* -- Test / Run info in toolbar ----------------------------------------- */
+
+.toolbar-test-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.test-label {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.run-label { margin-left: 6px; }
+
+.test-name-value {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.test-name-value:hover {
+    background: var(--bg-tertiary);
+}
+
+.test-name-input {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-focus);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+    width: 120px;
+    outline: none;
+}
+
+.run-id-value {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 16px;
+    text-align: center;
+}
+
 .btn-sm {
     padding: 3px 8px;
     font-size: 11px;

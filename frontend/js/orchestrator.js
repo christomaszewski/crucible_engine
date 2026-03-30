@@ -5,6 +5,8 @@
 const Orchestrator = (() => {
     let stacksHostPath = '';
     let stacksContainerPath = '/opt/stacks';
+    let testName = '';
+    let runId = 1;
 
     function init() {
         WS.on('orch:orch_config', (data) => {
@@ -41,7 +43,7 @@ const Orchestrator = (() => {
         });
     }
 
-    function launchStack(agentId) {
+    function launchStack(agentId, silent) {
         const agent = Agents.getAll()[agentId];
         if (!agent) return;
 
@@ -72,7 +74,7 @@ const Orchestrator = (() => {
         });
 
         Agents.updateStackStatus(agentId, 'STARTING');
-        App.toast(`Launching stack for ${agentId}...`, 'info');
+        if (!silent) App.toast(`Launching stack for ${agentId}...`, 'info');
     }
 
     function stopStack(agentId) {
@@ -85,14 +87,37 @@ const Orchestrator = (() => {
         App.toast(`Stopping stack for ${agentId}...`, 'info');
     }
 
+    function launchAllStacks() {
+        const all = Agents.getAll();
+        let launched = 0;
+        for (const [id, agent] of Object.entries(all)) {
+            if (agent.stack_compose_file && !['RUNNING', 'STARTING'].includes(agent.stack_status)) {
+                launchStack(id, true);
+                launched++;
+            }
+        }
+        if (launched === 0) {
+            App.toast('No stacks to launch (set compose files first)', 'warning');
+        } else {
+            App.toast(`Launching ${launched} stack(s)...`, 'info');
+        }
+    }
+
     function stopAllStacks() {
         WS.sendOrch({ cmd: 'stop_all_stacks' });
         // Optimistically mark all running/degraded agents as stopping
         const all = Agents.getAll();
+        let stopped = 0;
         for (const [id, agent] of Object.entries(all)) {
             if (['RUNNING', 'DEGRADED', 'STARTING'].includes(agent.stack_status)) {
                 Agents.updateStackStatus(id, 'STOPPING');
+                stopped++;
             }
+        }
+        // Increment run ID after stopping
+        if (stopped > 0) {
+            runId++;
+            _updateRunIdDisplay();
         }
         App.toast('Stopping all stacks...', 'info');
     }
@@ -111,5 +136,30 @@ const Orchestrator = (() => {
         WS.sendOrch({ cmd: 'get_stack_status' });
     }
 
-    return { init, launchStack, stopStack, stopAllStacks, refreshStatus, resolveHostPath, getStacksHostPath };
+    function getTestName() { return testName; }
+    function setTestName(name) {
+        testName = name;
+        _updateTestNameDisplay();
+    }
+    function getRunId() { return runId; }
+    function setRunId(id) {
+        runId = id;
+        _updateRunIdDisplay();
+    }
+
+    function _updateTestNameDisplay() {
+        const el = document.getElementById('test-name-value');
+        if (el && !el.querySelector('input')) el.textContent = testName || 'untitled';
+    }
+
+    function _updateRunIdDisplay() {
+        const el = document.getElementById('run-id-value');
+        if (el) el.textContent = runId;
+    }
+
+    return {
+        init, launchStack, stopStack, launchAllStacks, stopAllStacks,
+        refreshStatus, resolveHostPath, getStacksHostPath,
+        getTestName, setTestName, getRunId, setRunId,
+    };
 })();

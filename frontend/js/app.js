@@ -121,7 +121,33 @@ const App = (() => {
         // Toolbar buttons
         document.getElementById('btn-add-agent').addEventListener('click', showAddAgentModal);
         document.getElementById('btn-fit-agents').addEventListener('click', () => MapView.fitAgents());
+        document.getElementById('btn-start-all-stacks').addEventListener('click', () => Orchestrator.launchAllStacks());
         document.getElementById('btn-stop-all-stacks').addEventListener('click', () => Orchestrator.stopAllStacks());
+
+        // Test name click-to-edit
+        document.getElementById('test-name-value').addEventListener('click', (e) => {
+            const el = e.currentTarget;
+            if (el.querySelector('input')) return;
+            const current = Orchestrator.getTestName();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'test-name-input';
+            input.value = current;
+            input.placeholder = 'test name';
+            el.textContent = '';
+            el.appendChild(input);
+            input.focus();
+            input.select();
+            const commit = () => {
+                const val = input.value.trim();
+                Orchestrator.setTestName(val);
+            };
+            input.addEventListener('blur', commit);
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+                if (ev.key === 'Escape') { Orchestrator.setTestName(current); }
+            });
+        });
 
         // Agent list sort
         document.getElementById('agent-sort').addEventListener('change', (e) => {

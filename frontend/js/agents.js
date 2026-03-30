@@ -34,8 +34,10 @@ const Agents = (() => {
                 FLEET_IDS: true,
                 FLEET_SIZE: true,
                 ROS_DOMAIN_ID: true,
+                RUN_ID: true,
                 SIM_NET: true,
                 STACK_DIR: true,
+                TEST_NAME: true,
             },
             stack_sys_env_remap: data.stack_sys_env_remap || {},
         };
@@ -391,8 +393,10 @@ const Agents = (() => {
             FLEET_IDS: allIds.map(id => { const m = id.match(/_(\d+)$/); return m ? String(parseInt(m[1], 10)) : '0'; }).join(','),
             FLEET_SIZE: String(allIds.length),
             ROS_DOMAIN_ID: agentIdNum,
+            RUN_ID: String((typeof Orchestrator !== 'undefined') ? Orchestrator.getRunId() : 1),
             SIM_NET: 'crucible_sim_net',
             STACK_DIR: stackDir,
+            TEST_NAME: (typeof Orchestrator !== 'undefined') ? Orchestrator.getTestName() : '',
         };
     }
 

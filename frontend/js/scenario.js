@@ -61,6 +61,14 @@ const Scenario = (() => {
                 App.toast('No configuration provided', 'error');
                 return;
             }
+            // Extract test_name from YAML if present and reset run counter
+            if (typeof Orchestrator !== 'undefined') {
+                const nameMatch = yaml.match(/^test_name:\s*(.+)$/m);
+                if (nameMatch) {
+                    Orchestrator.setTestName(nameMatch[1].trim().replace(/^['"]|['"]$/g, ''));
+                }
+                Orchestrator.setRunId(1);
+            }
             WS.sendBridge({ cmd: 'load_scenario', config_yaml: yaml });
             hideModal();
             App.toast('Loading scenario...', 'info');
