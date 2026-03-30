@@ -382,8 +382,8 @@ const Agents = (() => {
         const agentIdNum = match ? String(parseInt(match[1], 10)) : '0';
         const allIds = Object.keys(agents);
         // Compute STACK_DIR: host path of the compose file's directory
-        const composePath = agent.stack_compose_file || '';
-        const composeDir = composePath ? composePath.replace(/\/[^/]+$/, '') : '';
+        const composePath = agent.stack_compose_file || '/opt/stacks/agent_stack.yml';
+        const composeDir = composePath.replace(/\/[^/]+$/, '');
         const stackDir = (typeof Orchestrator !== 'undefined' && Orchestrator.resolveHostPath)
             ? Orchestrator.resolveHostPath(composeDir) : composeDir;
         return {
@@ -490,7 +490,7 @@ const Agents = (() => {
             area.innerHTML = '<div style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">No env vars</div>';
         } else {
             area.innerHTML = entries.map(([k, v]) =>
-                `<div class="pose-row"><span class="pose-label" style="font-size:10px">${k}</span><span class="pose-val editable" data-env-key="${k}" style="font-size:10px">${v}</span></div>`
+                `<div class="pose-row"><span class="pose-label" style="font-size:10px">${k}</span><span class="pose-val editable" data-env-key="${k}" style="font-size:10px">${v}</span><span class="env-delete" data-env-key="${k}" title="Remove ${k}">&times;</span></div>`
             ).join('');
         }
 
@@ -539,6 +539,15 @@ const Agents = (() => {
                     if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
                     if (e.key === 'Escape') { el.textContent = currentVal; }
                 });
+            });
+        });
+
+        // Delete env var handlers
+        area.querySelectorAll('.env-delete').forEach(el => {
+            el.addEventListener('click', () => {
+                const envKey = el.dataset.envKey;
+                if (agent.stack_env) delete agent.stack_env[envKey];
+                _renderStackEnv(agentId);
             });
         });
     }

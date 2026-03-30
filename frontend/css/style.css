@@ -1468,9 +1468,20 @@ select.form-input {
     color: var(--text-secondary);
     text-align: right;
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.sys-env-val::-webkit-scrollbar {
+    height: 3px;
+}
+
+.sys-env-val::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
 }
 
 /* -- Stack service status rows ------------------------------------------ */
@@ -1524,6 +1535,26 @@ select.form-input {
     text-transform: uppercase;
     letter-spacing: 0.6px;
     color: var(--text-muted);
+}
+
+.env-delete {
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    padding: 0 2px;
+    margin-left: 2px;
+    opacity: 0;
+    transition: opacity var(--transition), color var(--transition);
+}
+
+.pose-row:hover .env-delete {
+    opacity: 0.6;
+}
+
+.env-delete:hover {
+    opacity: 1 !important;
+    color: var(--danger);
 }
 
 .place-mode-banner {

@@ -5,7 +5,7 @@
 const Orchestrator = (() => {
     let stacksHostPath = '';
     let stacksContainerPath = '/opt/stacks';
-    let testName = '';
+    let testName = 'test_default';
     let runId = 1;
 
     function init() {
@@ -149,7 +149,7 @@ const Orchestrator = (() => {
 
     function _updateTestNameDisplay() {
         const el = document.getElementById('test-name-value');
-        if (el && !el.querySelector('input')) el.textContent = testName || 'untitled';
+        if (el && !el.querySelector('input')) el.textContent = testName || 'test_default';
     }
 
     function _updateRunIdDisplay() {
