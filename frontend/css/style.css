@@ -181,13 +181,29 @@ html, body {
 /* -- Toolbar ------------------------------------------------------------ */
 
 .toolbar-brand {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--accent);
-    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-right: 16px;
     user-select: none;
+}
+
+.toolbar-logo {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px rgba(255, 152, 0, 0.3));
+}
+
+.toolbar-brand-text {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 2px;
+    background: linear-gradient(180deg, #FFD54F 0%, #FF9800 60%, #E65100 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .toolbar-sep {
