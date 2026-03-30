@@ -274,6 +274,17 @@ html, body {
     background: var(--danger-dim);
 }
 
+.btn-danger-subtle {
+    color: var(--text-secondary);
+    border-color: var(--border);
+}
+
+.btn-danger-subtle:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: var(--danger-dim);
+}
+
 .btn-sm {
     padding: 3px 8px;
     font-size: 11px;

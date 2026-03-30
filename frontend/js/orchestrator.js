@@ -77,9 +77,21 @@ const Orchestrator = (() => {
         App.toast(`Stopping stack for ${agentId}...`, 'info');
     }
 
+    function stopAllStacks() {
+        WS.sendOrch({ cmd: 'stop_all_stacks' });
+        // Optimistically mark all running/degraded agents as stopping
+        const all = Agents.getAll();
+        for (const [id, agent] of Object.entries(all)) {
+            if (['RUNNING', 'DEGRADED', 'STARTING'].includes(agent.stack_status)) {
+                Agents.updateStackStatus(id, 'STOPPING');
+            }
+        }
+        App.toast('Stopping all stacks...', 'info');
+    }
+
     function refreshStatus() {
         WS.sendOrch({ cmd: 'get_stack_status' });
     }
 
-    return { init, launchStack, stopStack, refreshStatus };
+    return { init, launchStack, stopStack, stopAllStacks, refreshStatus };
 })();

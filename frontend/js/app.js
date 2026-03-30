@@ -121,6 +121,7 @@ const App = (() => {
         // Toolbar buttons
         document.getElementById('btn-add-agent').addEventListener('click', showAddAgentModal);
         document.getElementById('btn-fit-agents').addEventListener('click', () => MapView.fitAgents());
+        document.getElementById('btn-stop-all-stacks').addEventListener('click', () => Orchestrator.stopAllStacks());
 
         // Agent list sort
         document.getElementById('agent-sort').addEventListener('change', (e) => {
