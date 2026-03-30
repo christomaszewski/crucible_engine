@@ -30,11 +30,11 @@ const Agents = (() => {
             stack_sys_env: data.stack_sys_env || {
                 AGENT_ID: true,
                 AGENT_NAME: true,
-                AGENT_NAMESPACE: true,
-                FLEET_AGENTS: true,
+                AGENT_NS: true,
+                FLEET_NAMES: true,
                 FLEET_SIZE: true,
                 ROS_DOMAIN_ID: true,
-                SIM_NETWORK: true,
+                SIM_NET: true,
             },
             stack_sys_env_remap: data.stack_sys_env_remap || {},
         };
@@ -349,11 +349,11 @@ const Agents = (() => {
         return {
             AGENT_ID: agentIdNum,
             AGENT_NAME: agentId,
-            AGENT_NAMESPACE: agentId,
-            FLEET_AGENTS: allIds.join(','),
+            AGENT_NS: agentId,
+            FLEET_NAMES: allIds.join(','),
             FLEET_SIZE: String(allIds.length),
             ROS_DOMAIN_ID: String(agent.domain_id),
-            SIM_NETWORK: 'crucible_sim_net',
+            SIM_NET: 'crucible_sim_net',
         };
     }
 

@@ -57,7 +57,7 @@ html, body {
 
 #app {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 290px 1fr;
     grid-template-rows: 48px 1fr 32px;
     height: 100vh;
     gap: 0;
@@ -706,7 +706,7 @@ html, body {
     position: absolute;
     top: 12px;
     left: 12px;
-    width: 280px;
+    width: 300px;
     max-height: calc(100% - 24px);
     overflow-y: auto;
     background: var(--bg-secondary);
@@ -1327,7 +1327,7 @@ select.form-input {
 .sys-env-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     padding: 2px 0;
     font-family: var(--font-mono);
     font-size: 10px;
@@ -1344,16 +1344,20 @@ select.form-input {
 .sys-env-key {
     color: var(--text-muted);
     flex-shrink: 0;
-    min-width: 110px;
+    min-width: 90px;
 }
 
 .sys-env-remap {
     color: var(--text-muted);
     cursor: pointer;
-    flex-shrink: 0;
-    min-width: 80px;
+    flex-shrink: 1;
+    min-width: 20px;
+    max-width: 70px;
     font-size: 10px;
     opacity: 0.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     transition: opacity var(--transition), color var(--transition);
 }
 
@@ -1368,7 +1372,7 @@ select.form-input {
 }
 
 .sys-env-remap-input {
-    width: 64px !important;
+    width: 56px !important;
     font-size: 10px !important;
     text-transform: uppercase;
 }
