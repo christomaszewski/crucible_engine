@@ -351,6 +351,34 @@ html, body {
     font-weight: 600;
     min-width: 16px;
     text-align: center;
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+}
+
+.run-id-value:hover {
+    background: var(--bg-tertiary);
+}
+
+.run-id-input {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-focus);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+    width: 40px;
+    text-align: center;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.run-id-input::-webkit-outer-spin-button,
+.run-id-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .btn-sm {

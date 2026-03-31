@@ -149,6 +149,32 @@ const App = (() => {
             });
         });
 
+        // Run ID click-to-edit
+        document.getElementById('run-id-value').addEventListener('click', (e) => {
+            const el = e.currentTarget;
+            if (el.querySelector('input')) return;
+            const current = Orchestrator.getRunId();
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '1';
+            input.step = '1';
+            input.className = 'run-id-input';
+            input.value = current;
+            el.textContent = '';
+            el.appendChild(input);
+            input.focus();
+            input.select();
+            const commit = () => {
+                const val = parseInt(input.value, 10);
+                Orchestrator.setRunId(val > 0 ? val : 1);
+            };
+            input.addEventListener('blur', commit);
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+                if (ev.key === 'Escape') { Orchestrator.setRunId(current); }
+            });
+        });
+
         // Agent list sort
         document.getElementById('agent-sort').addEventListener('change', (e) => {
             Agents.setSortMode(e.target.value);
