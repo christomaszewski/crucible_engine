@@ -27,6 +27,7 @@ def discover_all_plugins() -> None:
     import sim_engine.motion.static  # noqa: F401
     import sim_engine.motion.waypoint  # noqa: F401
     import sim_engine.motion.commanded  # noqa: F401
+    import sim_engine.motion.log_playback  # noqa: F401
 
     # Discover external plugins
     discover_sensor_plugins()

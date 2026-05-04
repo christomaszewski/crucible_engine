@@ -18,6 +18,7 @@ from rclpy.qos import (
     QoSReliabilityPolicy,
 )
 from rosgraph_msgs.msg import Clock
+from sensor_msgs.msg import Imu, NavSatFix
 from std_msgs.msg import Header
 
 from crucible_msgs.msg import GroundTruth
@@ -43,6 +44,7 @@ from sim_engine.config_loader import (
     save_scenario,
 )
 from sim_engine.motion.commanded import CommandedVelocityModel
+from sim_engine.motion.log_playback import LogPlaybackMotionModel
 from sim_engine.plugin_discovery import discover_all_plugins
 from sim_engine.scenario_runner import ScenarioRunner
 from sim_engine.sensors import QoSPreset, SensorModel, TopicConfig
@@ -76,6 +78,7 @@ class _AgentPublishers:
         self.sensor_pubs: dict[str, Any] = {}  # sensor_name -> publisher
         self.ground_truth_pub: Any = None
         self.cmd_vel_sub: Any = None
+        self.log_playback_subs: list[Any] = []
 
 
 class SimEngineNode(Node):
@@ -306,6 +309,27 @@ class SimEngineNode(Node):
             )
             self.get_logger().info(f"Subscribing cmd_vel: {cmd_topic}")
 
+        # Log-playback subscribers (if log_playback motion)
+        if isinstance(agent.motion_model, LogPlaybackMotionModel):
+            mm = agent.motion_model
+            pos_topic = mm.resolve_topic(agent.agent_name, mm.position_topic)
+            pubs.log_playback_subs.append(
+                self.create_subscription(
+                    NavSatFix, pos_topic, mm.on_position, _make_qos(QoSPreset.SENSOR_DATA)
+                )
+            )
+            self.get_logger().info(f"Subscribing log_playback position: {pos_topic}")
+            if mm.orientation_topic:
+                ori_topic = mm.resolve_topic(agent.agent_name, mm.orientation_topic)
+                pubs.log_playback_subs.append(
+                    self.create_subscription(
+                        Imu, ori_topic, mm.on_orientation, _make_qos(QoSPreset.SENSOR_DATA)
+                    )
+                )
+                self.get_logger().info(
+                    f"Subscribing log_playback orientation: {ori_topic}"
+                )
+
         self._agent_pubs[agent.agent_name] = pubs
 
     def _unregister_agent(self, agent_name: str) -> None:
@@ -320,6 +344,8 @@ class SimEngineNode(Node):
             self.destroy_publisher(pubs.ground_truth_pub)
         if pubs.cmd_vel_sub:
             self.destroy_subscription(pubs.cmd_vel_sub)
+        for sub in pubs.log_playback_subs:
+            self.destroy_subscription(sub)
 
     # -- Service handlers ----------------------------------------------------
 
