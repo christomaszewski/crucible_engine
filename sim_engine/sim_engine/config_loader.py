@@ -91,10 +91,15 @@ def build_world_from_config(config: dict[str, Any]) -> tuple[WorldState, dict]:
 
     Returns:
         Tuple of (world_state, sim_config) where sim_config contains
-        top-level sim parameters (sim_dt, speed_multiplier, etc.)
+        top-level sim parameters (sim_dt, speed_multiplier, etc.) and
+        the optional top-level test_name.
     """
     world = WorldState()
-    sim_cfg = config.get("sim", {})
+    sim_cfg = dict(config.get("sim", {}))
+
+    # Top-level test_name (carried alongside sim params for the UI)
+    if "test_name" in config:
+        sim_cfg["test_name"] = config["test_name"]
 
     # Terrain
     dem_path = sim_cfg.get("terrain", {}).get("dem_path")
@@ -113,16 +118,20 @@ def build_world_from_config(config: dict[str, Any]) -> tuple[WorldState, dict]:
 
 def save_scenario(world: WorldState, sim_cfg: dict[str, Any]) -> str:
     """Serialize the current world state and sim config to YAML."""
-    config: dict[str, Any] = {
-        "sim": {
-            "sim_dt": sim_cfg.get("sim_dt", 0.01),
-            "speed_multiplier": sim_cfg.get("speed_multiplier", 1.0),
-            "seed": sim_cfg.get("seed", 42),
-            "sim_time_s": world.sim_time_sec,
-            "status": sim_cfg.get("status", "READY"),
-        },
-        "agents": {},
+    config: dict[str, Any] = {}
+
+    # Top-level test_name (preserved across load/save for UI display)
+    if sim_cfg.get("test_name"):
+        config["test_name"] = sim_cfg["test_name"]
+
+    config["sim"] = {
+        "sim_dt": sim_cfg.get("sim_dt", 0.01),
+        "speed_multiplier": sim_cfg.get("speed_multiplier", 1.0),
+        "seed": sim_cfg.get("seed", 42),
+        "sim_time_s": world.sim_time_sec,
+        "status": sim_cfg.get("status", "READY"),
     }
+    config["agents"] = {}
 
     # Terrain
     if world.terrain and world.terrain.available:

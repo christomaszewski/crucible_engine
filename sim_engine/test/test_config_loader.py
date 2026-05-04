@@ -217,3 +217,50 @@ class TestSaveScenario:
         yaml_out = save_scenario(world, sim_cfg)
         config = load_scenario(yaml_out)
         assert len(config.get("agents", {})) == 0
+
+
+class TestTestNameRoundTrip:
+    """Top-level test_name field is preserved across load/save."""
+
+    SCENARIO_WITH_NAME = """
+test_name: kraken_log_replay_01
+
+sim:
+  sim_dt: 0.01
+
+agents:
+  uav_01:
+    initial_pose: {lat: 0, lon: 0, alt: 100}
+    motion: {type: static}
+"""
+
+    def test_build_world_extracts_test_name(self):
+        config = load_scenario(self.SCENARIO_WITH_NAME)
+        _, sim_cfg = build_world_from_config(config)
+        assert sim_cfg.get("test_name") == "kraken_log_replay_01"
+
+    def test_build_world_no_test_name(self):
+        config = load_scenario(MINIMAL_SCENARIO)
+        _, sim_cfg = build_world_from_config(config)
+        assert "test_name" not in sim_cfg
+
+    def test_save_emits_test_name(self):
+        world = WorldState()
+        sim_cfg = {"sim_dt": 0.01, "test_name": "my_test"}
+        yaml_out = save_scenario(world, sim_cfg)
+        config = load_scenario(yaml_out)
+        assert config.get("test_name") == "my_test"
+
+    def test_save_omits_blank_test_name(self):
+        world = WorldState()
+        sim_cfg = {"sim_dt": 0.01, "test_name": ""}
+        yaml_out = save_scenario(world, sim_cfg)
+        config = load_scenario(yaml_out)
+        assert "test_name" not in config
+
+    def test_full_round_trip(self):
+        config = load_scenario(self.SCENARIO_WITH_NAME)
+        world, sim_cfg = build_world_from_config(config)
+        yaml_out = save_scenario(world, sim_cfg)
+        config2 = load_scenario(yaml_out)
+        assert config2.get("test_name") == "kraken_log_replay_01"

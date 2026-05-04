@@ -348,6 +348,7 @@ class WsBridgeNode(Node):
         sim_time = 0.0
         sim_status = "READY"
         sim_dt = 0.01
+        test_name = ""
 
         # Try to get full state from SaveScenario service
         try:
@@ -362,6 +363,7 @@ class WsBridgeNode(Node):
                 sim_time = sim_cfg.get("sim_time_s", 0.0)
                 sim_status = sim_cfg.get("status", "READY")
                 sim_dt = sim_cfg.get("sim_dt", 0.01)
+                test_name = config.get("test_name", "") or ""
 
                 for agent_name, agent_cfg in config.get("agents", {}).items():
                     pose = agent_cfg.get("initial_pose", {})
@@ -402,6 +404,7 @@ class WsBridgeNode(Node):
                 "sim_time_s": sim_time,
                 "status": sim_status,
                 "sim_dt": sim_dt,
+                "test_name": test_name,
             },
             "state_version": self._state_version,
         }))

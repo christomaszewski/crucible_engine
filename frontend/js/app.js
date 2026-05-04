@@ -96,6 +96,7 @@ const App = (() => {
                     SimControl.updateTime(data.data.sim_time_s || 0);
                     if (data.data.status) SimControl.setStatus(data.data.status);
                     if (data.data.sim_dt) SimControl.setDt(data.data.sim_dt);
+                    if (data.data.test_name) Orchestrator.setTestName(data.data.test_name);
                     MapView.fitAgents();
                     updatePlaceButton();
                 }
