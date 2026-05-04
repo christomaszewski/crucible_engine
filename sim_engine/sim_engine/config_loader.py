@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import yaml
@@ -13,6 +14,11 @@ from sim_engine.sensors import SENSOR_REGISTRY, SensorModel
 from sim_engine.world_state import WorldState
 
 logger = logging.getLogger(__name__)
+
+# Matches a top-level `test_name: VALUE` line (not indented). Captures the
+# raw VALUE so we can preserve the literal string when YAML 1.1 number
+# coercion would otherwise mangle it (e.g. "2024_01_15" → 20240115).
+_TEST_NAME_RE = re.compile(r"^test_name:\s*([^\n#][^\n#]*?)\s*(?:#.*)?$", re.MULTILINE)
 
 
 def build_sensor(sensor_name: str, sensor_cfg: dict[str, Any]) -> SensorModel:
@@ -83,7 +89,23 @@ def load_agent_from_config(agent_name: str, agent_cfg: dict[str, Any]) -> Agent:
 
 def load_scenario(yaml_str: str) -> dict[str, Any]:
     """Parse a YAML scenario string and return the raw config dict."""
-    return yaml.safe_load(yaml_str)
+    config = yaml.safe_load(yaml_str)
+    if isinstance(config, dict) and "test_name" in config:
+        # YAML 1.1's safe_load coerces underscored numeric strings (e.g.
+        # "2024_01_15") into ints. Re-extract from the source so the user's
+        # literal text survives, regardless of whether they quoted it.
+        if not isinstance(config["test_name"], str):
+            m = _TEST_NAME_RE.search(yaml_str)
+            if m:
+                raw = m.group(1).strip()
+                if (raw.startswith('"') and raw.endswith('"')) or (
+                    raw.startswith("'") and raw.endswith("'")
+                ):
+                    raw = raw[1:-1]
+                config["test_name"] = raw
+            else:
+                config["test_name"] = str(config["test_name"])
+    return config
 
 
 def build_world_from_config(config: dict[str, Any]) -> tuple[WorldState, dict]:

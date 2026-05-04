@@ -264,3 +264,24 @@ agents:
         yaml_out = save_scenario(world, sim_cfg)
         config2 = load_scenario(yaml_out)
         assert config2.get("test_name") == "kraken_log_replay_01"
+
+    def test_numeric_underscored_name_preserved(self):
+        """YAML 1.1 coerces "2024_01_15" to int 20240115; we recover it."""
+        config = load_scenario("test_name: 2024_01_15\nsim:\n  sim_dt: 0.01\n")
+        assert config["test_name"] == "2024_01_15"
+
+    def test_numeric_underscored_name_round_trip(self):
+        """Numeric-looking name survives load → build → save → load."""
+        config = load_scenario("test_name: 2024_01_15\nsim:\n  sim_dt: 0.01\n")
+        world, sim_cfg = build_world_from_config(config)
+        yaml_out = save_scenario(world, sim_cfg)
+        config2 = load_scenario(yaml_out)
+        assert config2.get("test_name") == "2024_01_15"
+
+    def test_quoted_name_strips_quotes(self):
+        config = load_scenario('test_name: "my_test_99"\nsim: {}\n')
+        assert config["test_name"] == "my_test_99"
+
+    def test_inline_comment_stripped(self):
+        config = load_scenario("test_name: 1_2_3   # version\nsim: {}\n")
+        assert config["test_name"] == "1_2_3"
