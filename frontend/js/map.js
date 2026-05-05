@@ -393,6 +393,13 @@ const MapView = (() => {
         map.fitBounds(group.getBounds().pad(0.2));
     }
 
+    function zoomToAgent(agentId, zoomLevel = 17) {
+        const marker = agentMarkers[agentId];
+        if (!marker) return false;
+        map.flyTo(marker.getLatLng(), zoomLevel, { duration: 0.6 });
+        return true;
+    }
+
     function setDraggable(enabled) {
         for (const marker of Object.values(agentMarkers)) {
             if (enabled) {
@@ -445,6 +452,7 @@ const MapView = (() => {
         enterPlaceMode,
         exitPlaceMode,
         fitAgents,
+        zoomToAgent,
         setDraggable,
         setTypeFilter,
         isTypeHidden,

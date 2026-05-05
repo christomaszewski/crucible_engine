@@ -197,10 +197,14 @@ class SimEngineNode(Node):
 
     def _tick(self) -> None:
         """Main simulation tick — motion, sensors, ground truth, clock."""
-        if self._status != "RUNNING":
-            return
-
-        self._step_once()
+        if self._status == "RUNNING":
+            self._step_once()
+        else:
+            # Externally-driven agents (log_playback) keep updating regardless
+            # of sim state — their pose comes from a bag/external source, so
+            # there's no reason to freeze the marker just because the sim is
+            # paused or hasn't been started yet.
+            self._step_external_agents_only()
 
     def _step_once(self) -> None:
         """Advance the simulation by exactly one sim_dt."""
@@ -246,38 +250,69 @@ class SimEngineNode(Node):
 
     def _publish_ground_truth(self) -> None:
         """Publish GroundTruth for all agents."""
+        for agent in self._world.get_all_agents():
+            self._publish_agent_ground_truth(agent)
+
+    def _publish_agent_ground_truth(self, agent: Agent) -> None:
+        """Publish a single agent's GroundTruth message."""
+        pubs = self._agent_pubs.get(agent.agent_name)
+        if pubs is None or pubs.ground_truth_pub is None:
+            return
+
+        from sim_engine.sensors.imu import euler_to_quaternion
+
         stamp_sec = int(self._world.sim_time_ns // 1_000_000_000)
         stamp_nsec = int(self._world.sim_time_ns % 1_000_000_000)
 
-        for agent in self._world.get_all_agents():
-            pubs = self._agent_pubs.get(agent.agent_name)
-            if pubs is None or pubs.ground_truth_pub is None:
-                continue
+        msg = GroundTruth()
+        msg.header = Header()
+        msg.header.stamp.sec = stamp_sec
+        msg.header.stamp.nanosec = stamp_nsec
+        msg.header.frame_id = f"{agent.agent_name}/base_link"
+        msg.latitude = agent.pose.latitude
+        msg.longitude = agent.pose.longitude
+        msg.altitude = agent.pose.altitude
+        msg.orientation = euler_to_quaternion(
+            agent.pose.roll, agent.pose.pitch, agent.pose.heading
+        )
+        msg.linear_velocity = Vector3(
+            x=agent.velocity.vx,
+            y=agent.velocity.vy,
+            z=agent.velocity.vz,
+        )
+        msg.angular_velocity = Vector3(
+            x=agent.velocity.wx,
+            y=agent.velocity.wy,
+            z=agent.velocity.wz,
+        )
+        pubs.ground_truth_pub.publish(msg)
 
-            from sim_engine.sensors.imu import euler_to_quaternion
+    def _step_external_agents_only(self) -> None:
+        """Tick log_playback agents and publish their ground truth.
 
-            msg = GroundTruth()
-            msg.header = Header()
-            msg.header.stamp.sec = stamp_sec
-            msg.header.stamp.nanosec = stamp_nsec
-            msg.header.frame_id = f"{agent.agent_name}/base_link"
-            msg.latitude = agent.pose.latitude
-            msg.longitude = agent.pose.longitude
-            msg.altitude = agent.pose.altitude
-            msg.orientation = euler_to_quaternion(
-                agent.pose.roll, agent.pose.pitch, agent.pose.heading
-            )
-            msg.linear_velocity = Vector3(
-                x=agent.velocity.vx,
-                y=agent.velocity.vy,
-                z=agent.velocity.vz,
-            )
-            msg.angular_velocity = Vector3(
-                x=agent.velocity.wx,
-                y=agent.velocity.wy,
-                z=agent.velocity.wz,
-            )
-            pubs.ground_truth_pub.publish(msg)
+        Called when the sim is not RUNNING. Lets bag-driven agents keep
+        their map markers updated from incoming messages without advancing
+        sim time, scenario events, or other agents' motion.
+        """
+        external = [
+            a for a in self._world.get_all_agents()
+            if isinstance(a.motion_model, LogPlaybackMotionModel)
+        ]
+        if not external:
+            return
+
+        sim_dt = self._sim_dt
+        for agent in external:
+            agent.motion_model.step(agent, self._world, sim_dt)
+
+        self._gt_accumulator += sim_dt
+        gt_interval = (
+            1.0 / self._gt_rate_hz if self._gt_rate_hz > 0 else float("inf")
+        )
+        if self._gt_accumulator >= gt_interval:
+            self._gt_accumulator -= gt_interval
+            for agent in external:
+                self._publish_agent_ground_truth(agent)
 
     # -- Agent lifecycle -----------------------------------------------------
 

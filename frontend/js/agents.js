@@ -238,6 +238,7 @@ const Agents = (() => {
                 <div class="detail-title">
                     <span class="agent-type-icon type-${dvtype}">${Icons.getSvg(dvtype)}</span>
                     Agent: ${agentId}
+                    <button class="btn btn-sm btn-icon detail-zoom-btn" id="btn-zoom-agent" title="Zoom to vehicle">&#9678;</button>
                 </div>
                 <div class="pose-row">
                     <span class="pose-label">Type</span>
@@ -297,6 +298,11 @@ const Agents = (() => {
             hideDetail();
             renderList();
             if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
+        });
+
+        // Zoom-to-vehicle button
+        document.getElementById('btn-zoom-agent').addEventListener('click', () => {
+            MapView.zoomToAgent(agentId);
         });
 
         // Click-to-edit on pose values (sensor config style)
