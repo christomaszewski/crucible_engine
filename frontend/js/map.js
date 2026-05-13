@@ -48,7 +48,9 @@ const MapView = (() => {
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // ESC cancels any active mode
+            const editingInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+
+            // ESC cancels any active mode, then deselects the vehicle
             if (e.key === 'Escape') {
                 if (adjustMode) {
                     _cancelAdjustment();
@@ -58,13 +60,20 @@ const MapView = (() => {
                     exitPlaceMode();
                     return;
                 }
+                if (!editingInput && Agents.getSelected()) {
+                    Agents.deselect();
+                    return;
+                }
             }
 
             // Ignore hotkeys when typing in an input
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+            if (editingInput) return;
 
             const selectedId = Agents.getSelected();
             if (!selectedId || !agentMarkers[selectedId]) return;
+
+            // Pose-edit hotkeys are disabled while the simulation is running
+            if (SimControl.getStatus() === 'RUNNING') return;
 
             if (e.key === 'r' || e.key === 'R') {
                 e.preventDefault();

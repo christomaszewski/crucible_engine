@@ -88,17 +88,22 @@ const Agents = (() => {
     function selectAgent(agentId) {
         if (selectedId === agentId) {
             // Toggle off if clicking the same agent
-            selectedId = null;
-            MapView.selectAgent(null);
-            hideDetail();
-            renderList();
-            if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
+            deselect();
             return;
         }
         selectedId = agentId;
         MapView.selectAgent(agentId);
         renderList();
         showDetail(agentId);
+        if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
+    }
+
+    function deselect() {
+        if (selectedId === null) return;
+        selectedId = null;
+        MapView.selectAgent(null);
+        hideDetail();
+        renderList();
         if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
     }
 
@@ -293,11 +298,7 @@ const Agents = (() => {
 
         // Close button
         document.getElementById('detail-close').addEventListener('click', () => {
-            selectedId = null;
-            MapView.selectAgent(null);
-            hideDetail();
-            renderList();
-            if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
+            deselect();
         });
 
         // Zoom-to-vehicle button
@@ -760,6 +761,7 @@ const Agents = (() => {
         removeAgent,
         updateGroundTruth,
         selectAgent,
+        deselect,
         updateStackStatus,
         refreshDetail: showDetail,
         generateId,

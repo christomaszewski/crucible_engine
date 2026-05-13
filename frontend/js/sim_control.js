@@ -55,6 +55,9 @@ const SimControl = (() => {
             const sel = Agents.getSelected();
             if (sel) Agents.refreshDetail(sel);
 
+            // Refresh hotkey overlay so pose-edit hotkeys reflect run state
+            if (typeof App !== 'undefined' && App.updateHotkeyOverlay) App.updateHotkeyOverlay();
+
             // On reset (READY): update time to 0 and refresh agent positions
             if (simStatus === 'READY') {
                 updateTime(0);

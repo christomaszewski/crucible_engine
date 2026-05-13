@@ -366,16 +366,21 @@ const App = (() => {
         }
         const agentData = Agents.getAll()[selectedId] || {};
         const vtype = (agentData.vehicle_type || Icons.getTypeFromId(selectedId)).toLowerCase();
+        const running = SimControl.getStatus() === 'RUNNING';
+        const dim = (s) => running ? `<span class="hotkey-disabled">${s}</span>` : s;
 
         let lines = [
-            '<kbd>R</kbd> Set heading',
+            dim('<kbd>R</kbd> Set heading'),
         ];
         if (vtype === 'uuv') {
-            lines.push('<kbd>A</kbd> Set depth');
+            lines.push(dim('<kbd>A</kbd> Set depth'));
         } else if (vtype !== 'ugv' && vtype !== 'usv') {
-            lines.push('<kbd>A</kbd> Set altitude');
+            lines.push(dim('<kbd>A</kbd> Set altitude'));
         }
         lines.push('<kbd>ESC</kbd> Cancel / deselect');
+        if (running) {
+            lines.push('<span class="hotkey-note">disabled while running</span>');
+        }
         overlay.innerHTML = lines.join('<br>');
         overlay.classList.add('visible');
     }
